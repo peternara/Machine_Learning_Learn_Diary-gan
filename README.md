@@ -17,6 +17,6 @@ tensorlayer learn
 ---
 tensorflow K-means algorithm implement
 
-[] MNIST_CNN_K-means.py
+[ ] MNIST_CNN_K-means.py
 ---
 MNIST identification with CNN then using K-means to clustering
