@@ -4,9 +4,6 @@ MNIST_identification with CNN
 
 **accuracy rate = 99.13%**
 
-[√] learn-SAE.py
----
-MNIST_identification with auto_encoder
 
 **accurancy rate = 81.21%**
 
