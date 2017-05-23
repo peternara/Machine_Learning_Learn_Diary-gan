@@ -59,4 +59,4 @@ accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
 saver = tf.train.Saver()
 saver.restore(sess, './train_data/mnist.train')
-print accuracy.eval(feed_dict={x: mnist.test.images[:2000], y_: mnist.test.labels[:2000], keep_prob: 1.0})
+print accuracy.eval(feed_dict={x: mnist.test.images, y_: mnist.test.labels, keep_prob: 1.0})
