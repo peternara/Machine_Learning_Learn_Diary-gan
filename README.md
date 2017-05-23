@@ -17,7 +17,7 @@ tensorlayer learn
 ---
 tensorflow K-means algorithm implement
 
-![](http://https://github.com/wqj97/Machine_Learning_Learn_Diary/blob/master/image/K-means-base.png)
+![](https://github.com/wqj97/Machine_Learning_Learn_Diary/blob/master/image/K-means-base.png)
 
 [ ] MNIST_CNN_K-means.py
 ---
