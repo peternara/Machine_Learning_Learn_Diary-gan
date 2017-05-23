@@ -13,8 +13,10 @@ tensorlayer learn
 
 **Not Started**
 
-[ ] kmeans.py
+[√] kmeans.py
 ---
 tensorflow K-means algorithm implement
 
-**unfinished**
+[] MNIST_CNN_K-means.py
+---
+MNIST identification with CNN then using K-means to clustering
