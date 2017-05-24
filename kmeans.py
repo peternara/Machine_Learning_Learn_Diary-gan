@@ -27,7 +27,8 @@ centers = [[-2, -2], [-2, 1.5], [1.5, -2], [2, 1.5]]  # 簇中心
 
 # 生成人工数据集
 # data, features = make_circles(n_samples=200, shuffle=True, noise=0.1, factor=0.4)
-data, features = make_blobs(n_samples=200, centers=centers, n_features=2, cluster_std=0.8, shuffle=False, random_state=42)
+data, features = make_blobs(n_samples=200, centers=centers, n_features=2, cluster_std=0.8, shuffle=False,
+                            random_state=42)
 
 # 显示原图像
 plt.scatter(data[:, 0], data[:, 1])
@@ -36,12 +37,13 @@ plt.scatter(data[:, 0], data[:, 1])
 kmeans = tf.contrib.learn.KMeansClustering(num_clusters=4, relative_tolerance=0.0001)
 
 sess = tf.Session()
+
+
 def input_fn():
     return tf.constant(data, tf.float32, np.shape(data)), None
 
+
 kmeans.fit(input_fn=input_fn)
 clusters = kmeans.clusters()
-print clusters
 assignments = list(kmeans.predict_cluster_idx(input_fn=input_fn))
-print assignments
 ScatterPlot(data[:, 0], data[:, 1], assignments, clusters)
