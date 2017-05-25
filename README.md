@@ -24,3 +24,9 @@ tensorflow K-means algorithm implement
 MNIST identification with CNN then using K-means to clustering
 
 **Still can't understand how to use K-means to build reduce fuction**
+
+[ ] benchmark.py
+---
+a simple bench script
+
+**Finished**

@@ -1,6 +1,7 @@
 # coding: utf-8
 import tensorflow as tf
 import input_data
+import time
 
 # import numpy as np
 
@@ -68,15 +69,19 @@ accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 sess.run(tf.global_variables_initializer())
 
 saver = tf.train.Saver()
-for i in xrange(20000):
-    batch = mnist.train.next_batch(50)
+start = time.clock()
+for i in xrange(200):
+    batch = mnist.train.next_batch(10)
     train_step.run(feed_dict={x: batch[0], y_: batch[1], keep_prob: 0.5})
+
     # if i % 100 == 0:
     #     print "train steep: {0}".format(i)
-        # train_accuracy = accuracy.eval(feed_dict={
-        #     x: batch[0], y_: batch[1], keep_prob: 1.0})
-        # print "step %d, training accuracy %g" % (i, train_accuracy)
+    # train_accuracy = accuracy.eval(feed_dict={
+    #     x: batch[0], y_: batch[1], keep_prob: 1.0})
+    # print "step %d, training accuracy %g" % (i, train_accuracy)
+end = time.clock()
+print "used: {0} s".format(end - start)
 
 print "test accuracy %g" % accuracy.eval(feed_dict={
     x: mnist.test.images, y_: mnist.test.labels, keep_prob: 1.0})
-saver.save(sess, './train_data/mnist.train')
+# saver.save(sess, './train_data/mnist.train')
