@@ -22,8 +22,21 @@ MNIST identification with CNN then using K-means to clustering
 
 **Still can't understand how to use K-means to build reduce fuction**
 
-[ ] examples/cfai10/cifar10.py  &&  cifar10_input.py
+[ ] tensorflow_example: cfair10
 ---
-Trying to understand how to read file async
+
+Trying to understand official example: cfair10
+
+This example is wrote in tensorflow-0.11
+
+It's not working in tensorflow-1.2rc0 cause of python api change
+
+I want's to update it to the newest api and create a pull request
+
+#### cifar10.input.py
+read steps
+- [x] tf.Reader
+- [ ] tf.image
+- [ ] tf.train.string_input_producer
 
 **Reading code**
