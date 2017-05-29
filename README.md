@@ -36,7 +36,11 @@ I want's to update it to the newest api and create a pull request
 #### cifar10.input.py
 read steps
 - [x] tf.Reader
-- [ ] tf.image
-- [ ] tf.train.string_input_producer
-
+- [x] tf.image
+- [x] tf.train.string_input_producer
+- [x] tf.get_variable tf.Variable tf.scope
+- [ ] weight_decay
+- [ ] bias_add
+- [ ] loss_function
+- [ ] train
 **Reading code**
