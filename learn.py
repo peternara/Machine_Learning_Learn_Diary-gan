@@ -5,7 +5,7 @@ import input_data
 # import numpy as np
 
 mnist = input_data.read_data_sets('MNIST_data', one_hot=True)
-sess = tf.InteractiveSession()
+sess = tf.InteractiveSession(config=tf.ConfigProto(intra_op_parallelism_threads=16))
 
 
 def weight_variable(shape):
@@ -71,6 +71,7 @@ saver = tf.train.Saver()
 for i in xrange(20000):
     batch = mnist.train.next_batch(50)
     train_step.run(feed_dict={x: batch[0], y_: batch[1], keep_prob: 0.5})
+    print i
     # if i % 100 == 0:
     #     print "train steep: {0}".format(i)
         # train_accuracy = accuracy.eval(feed_dict={

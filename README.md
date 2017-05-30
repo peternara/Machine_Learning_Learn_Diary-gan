@@ -39,7 +39,8 @@ read steps
 - [x] tf.image
 - [x] tf.train.string_input_producer
 - [x] tf.get_variable tf.Variable tf.scope
-- [ ] weight_decay
+- [x] weight_decay (conceptual)
+- [ ] weight_decay (coding)
 - [ ] bias_add
 - [ ] loss_function
 - [ ] train
