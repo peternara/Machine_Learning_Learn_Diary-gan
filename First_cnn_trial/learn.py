@@ -1,5 +1,6 @@
 # coding: utf-8
 import tensorflow as tf
+
 import input_data
 
 # import numpy as np

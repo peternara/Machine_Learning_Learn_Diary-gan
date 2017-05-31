@@ -1,8 +1,8 @@
 # coding: utf8
 
-import tensorflow as tf
-import numpy as np
 import matplotlib.pyplot as plt
+import tensorflow as tf
+
 import input_data
 
 # 卷积层
