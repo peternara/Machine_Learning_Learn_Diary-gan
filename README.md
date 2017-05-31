@@ -29,9 +29,7 @@ Trying to understand official example: cfair10
 
 This example is wrote in tensorflow-0.11
 
-It's not working in tensorflow-1.2rc0 cause of python api change
-
-I want's to update it to the newest api and create a pull request
+It's not working in tensorflow-1.2rc1 cause of python api change finished at 2017-06-01
 
 read steps
 - [x] tf.Reader
@@ -47,7 +45,7 @@ read steps
 > 4. tf.add_to_collection
 > 5. use collection
 
-- [ ] bias_add
+- [x] bias_add
 - [ ] loss_function
 - [ ] train
 
