@@ -40,7 +40,14 @@ read steps
 - [x] tf.train.string_input_producer
 - [x] tf.get_variable tf.Variable tf.scope
 - [x] weight_decay (conceptual)
-- [ ] weight_decay (coding)
+- [x] weight_decay (coding)
+
+> 1. tf.truncated_normal
+> 2. tf.l2_loss
+> 3. tf.multiply(step 1, step 2)
+> 4. tf.add_to_collection
+> 5. use collection
+
 - [ ] bias_add
 - [ ] loss_function
 - [ ] train
