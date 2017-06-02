@@ -49,6 +49,7 @@ read steps
 - [x] train
 
 [X] cloth classifier -- My first neuron network design by myself
+---
 
 ![cloth](https://github.com/wqj97/Machine_Learning_Learn_Diary/blob/master/image/T022.jpg)
 is cloth
