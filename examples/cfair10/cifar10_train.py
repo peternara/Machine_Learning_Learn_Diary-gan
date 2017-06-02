@@ -92,7 +92,6 @@ def train():
         sess = tf.Session(config=tf.ConfigProto(
             log_device_placement=FLAGS.log_device_placement))
         sess.run(init)
-
         # Start the queue runners.
         tf.train.start_queue_runners(sess=sess)
 
