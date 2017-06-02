@@ -48,4 +48,8 @@ read steps
 - [x] loss_function
 - [x] train
 
-**Reading code**
+[X] cloth classifier -- My first neuron network design by myself
+
+![cloth](https://github.com/wqj97/Machine_Learning_Learn_Diary/blob/master/image/T022.jpg)
+![Not cloth](https://github.com/wqj97/Machine_Learning_Learn_Diary/blob/master/image/F045.jpg)
+accuracy: 0.86
