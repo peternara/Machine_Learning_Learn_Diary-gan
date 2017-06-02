@@ -22,14 +22,13 @@ MNIST identification with CNN then using K-means to clustering
 
 **Still can't understand how to use K-means to build reduce fuction**
 
-[ ] tensorflow_example: examples/cfair10
+[x] tensorflow_example: examples/cfair10
 ---
 
-Trying to understand official example: cfair10
+rewrite Cifar10 with newest tensorflow API (1.2.0-rc1) and create
+a pull request to google, hope they will merge my code
 
-This example is wrote in tensorflow-0.11
-
-It's not working in tensorflow-1.2rc1 cause of python api change finished at 2017-06-01
+[#10349](https://github.com/tensorflow/tensorflow/pull/10349)
 
 read steps
 - [x] tf.Reader
@@ -46,7 +45,7 @@ read steps
 > 5. use collection
 
 - [x] bias_add
-- [ ] loss_function
-- [ ] train
+- [x] loss_function
+- [x] train
 
 **Reading code**
