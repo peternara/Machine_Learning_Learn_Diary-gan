@@ -51,5 +51,9 @@ read steps
 [X] cloth classifier -- My first neuron network design by myself
 
 ![cloth](https://github.com/wqj97/Machine_Learning_Learn_Diary/blob/master/image/T022.jpg)
+is cloth
+
 ![Not cloth](https://github.com/wqj97/Machine_Learning_Learn_Diary/blob/master/image/F045.jpg)
+not cloth
+
 accuracy: 0.86
