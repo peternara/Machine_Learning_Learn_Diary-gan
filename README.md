@@ -58,3 +58,7 @@ is cloth
 not cloth
 
 accuracy: 0.86
+
+add a drop out layer
+
+accuracy: 0.91
