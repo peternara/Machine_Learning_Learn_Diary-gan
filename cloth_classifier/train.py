@@ -30,7 +30,7 @@ def main(arg=None):
 
     train_step = tf.train.GradientDescentOptimizer(0.1).minimize(loss)
 
-    for i in xrange(5000):
+    for i in xrange(10001):
         if i % 100 == 0:
             print 'step {0}, loss: {1}'.format(i, sess.run(ls.get_loss()))
         sess.run(train_step)
