@@ -25,7 +25,7 @@ MNIST identification with CNN then using K-means to clustering
 [x] tensorflow_example: examples/cfair10
 ---
 
-rewrite Cifar10 with newest tensorflow API (1.2.0-rc1) and create
+Rewrite Cifar10 with newest tensorflow API (1.2.0-rc1) and create
 a pull request to google, hope they will merge my code
 
 [#10349](https://github.com/tensorflow/tensorflow/pull/10349)
