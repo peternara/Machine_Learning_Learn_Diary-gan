@@ -57,8 +57,10 @@ is cloth
 ![Not cloth](https://github.com/wqj97/Machine_Learning_Learn_Diary/blob/master/image/F045.jpg)
 not cloth
 
-accuracy: 0.86
+Accuracy: 0.86
 
-add a drop out layer
+Add a drop out layer
 
-accuracy: 0.91
+Accuracy: 0.91
+
+Figuring out how to optimize
