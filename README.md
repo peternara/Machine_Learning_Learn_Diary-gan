@@ -64,3 +64,8 @@ Add a drop out layer
 Accuracy: 0.91
 
 Figuring out how to optimize
+
+[ ] Batch normalization
+---
+
+Trying to use Batch normalization to

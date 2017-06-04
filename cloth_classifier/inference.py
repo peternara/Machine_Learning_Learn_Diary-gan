@@ -5,7 +5,7 @@ import numpy as np
 
 def variable_with_weight_decay(name, shape, stddev, wd):
     """
-    初始化权重, 如果有wd, name会进行L2规范化
+    初始化权重, 如果有wd会进行L2规范化
     :param name: 别名
     :param shape: 形状
     :param stddev: 高斯标准差
