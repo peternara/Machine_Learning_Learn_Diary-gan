@@ -69,3 +69,9 @@ Figuring out how to optimize
 ---
 
 Trying to use Batch normalization to
+
+
+[ ] GAN. Generative Adversarial Network
+---
+
+Trying to understand
