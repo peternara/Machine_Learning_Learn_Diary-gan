@@ -4,9 +4,9 @@ MNIST_identification with CNN
 
 **accuracy rate = 99.13%**
 
-[ ] tensorlayer.py
+[ ] tensorlayer || keras || sonnet || tflearn
 ---
-tensorlayer learn
+figure out which is the best suit me
 
 **Not Started**
 
