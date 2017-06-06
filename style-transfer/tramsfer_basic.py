@@ -28,7 +28,7 @@ ITERATIONS = 1000
 alpha = 1
 beta = 500
 # 加载VGG-19 MODEL及设定均值
-VGG_Model = 'Downloads/imagenet-vgg-verydeep-19.mat'
+VGG_Model = './imagenet-vgg-verydeep-19.mat'
 MEAN_VALUES = np.array([123.68, 116.779, 103.939]).reshape((1, 1, 1, 3))
 # 设置需要用到的卷积层
 CONTENT_LAYERS = [('conv4_2', 1.)]
