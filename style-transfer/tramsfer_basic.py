@@ -9,9 +9,9 @@ import tensorflow as tf
 # Output folder for the images.
 OUTPUT_DIR = 'output/'
 # Style image to use.
-STYLE_IMAGE = '/images/ocean.jpg'
+STYLE_IMAGE = './from.jpeg'
 # Content image to use.
-CONTENT_IMAGE = '/images/Taipei101.jpg'
+CONTENT_IMAGE = './to.JPG'
 # Image dimensions constants.
 IMAGE_WIDTH = 800
 IMAGE_HEIGHT = 600
@@ -28,33 +28,36 @@ ITERATIONS = 1000
 alpha = 1
 beta = 500
 # 加载VGG-19 MODEL及设定均值
-VGG_Model = './imagenet-vgg-verydeep-19.mat'
+VGG_Model = 'fast-style-transfer-master/data/imagenet-vgg-verydeep-19.mat'
 MEAN_VALUES = np.array([123.68, 116.779, 103.939]).reshape((1, 1, 1, 3))
 # 设置需要用到的卷积层
 CONTENT_LAYERS = [('conv4_2', 1.)]
 STYLE_LAYERS = [('conv1_1', 0.2), ('conv2_1', 0.2), ('conv3_1', 0.2), ('conv4_1', 0.2), ('conv5_1', 0.2)]
 
+
 # 生成随机噪声图，与content图以一定比率融合
-def generate_noise_image(content_image, noise_ratio = NOISE_RATIO):
+def generate_noise_image(content_image, noise_ratio=NOISE_RATIO):
     """
     Returns a noise image intermixed with the content image at a certain ratio.
     """
     noise_image = np.random.uniform(
-            -20, 20,
-            (1, IMAGE_HEIGHT, IMAGE_WIDTH, COLOR_CHANNELS)).astype('float32')
+        -20, 20,
+        (1, IMAGE_HEIGHT, IMAGE_WIDTH, COLOR_CHANNELS)).astype('float32')
     # White noise image from the content representation. Take a weighted average
     # of the values
     img = noise_image * noise_ratio + content_image * (1 - noise_ratio)
     return img
 
+
 def load_image(path):
     image = scipy.misc.imread(path)
-    # Resize the image for convnet input, there is no change but just
+    # Resize the image for convNet input, there is no change but just
     # add an extra dimension.
     image = np.reshape(image, ((1,) + image.shape))
     # Input to the VGG net expects the mean to be subtracted.
     image = image - MEAN_VALUES
     return image
+
 
 def save_image(path, image):
     # Output should add back the mean.
@@ -71,6 +74,7 @@ def build_net(ntype, nin, nwb=None):
     elif ntype == 'pool':
         return tf.nn.avg_pool(nin, ksize=[1, 2, 2, 1],
                               strides=[1, 2, 2, 1], padding='SAME')
+
 
 def get_weight_bias(vgg_layers, i):
     weights = vgg_layers[i][0][0][2][0][0]
@@ -110,7 +114,6 @@ def build_vgg19(path):
 
 
 def content_layer_loss(p, x):
-
     M = p.shape[1] * p.shape[2]
     N = p.shape[3]
     loss = (1. / (2 * N * M)) * tf.reduce_sum(tf.pow((x - p), 2))
@@ -118,26 +121,24 @@ def content_layer_loss(p, x):
 
 
 def content_loss_func(sess, net):
-
     layers = CONTENT_LAYERS
     total_content_loss = 0.0
     for layer_name, weight in layers:
         p = sess.run(net[layer_name])
         x = net[layer_name]
-        total_content_loss += content_layer_loss(p, x)*weight
+        total_content_loss += content_layer_loss(p, x) * weight
 
     total_content_loss /= float(len(layers))
     return total_content_loss
 
 
 def gram_matrix(x, area, depth):
-
     x1 = tf.reshape(x, (area, depth))
     g = tf.matmul(tf.transpose(x1), x1)
     return g
 
-def style_layer_loss(a, x):
 
+def style_layer_loss(a, x):
     M = a.shape[1] * a.shape[2]
     N = a.shape[3]
     A = gram_matrix(a, M, N)
@@ -147,7 +148,6 @@ def style_layer_loss(a, x):
 
 
 def style_loss_func(sess, net):
-
     layers = STYLE_LAYERS
     total_style_loss = 0.0
     for layer_name, weight in layers:
@@ -195,6 +195,7 @@ def main():
 
             filename = 'output/%d.png' % (it)
             save_image(filename, mixed_image)
+
 
 if __name__ == '__main__':
     main()
