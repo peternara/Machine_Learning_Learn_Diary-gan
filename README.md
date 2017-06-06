@@ -75,3 +75,9 @@ Trying to use Batch normalization to
 ---
 
 Trying to understand
+
+
+[ ] Styer transfer
+---
+
+Understanding transfer theory
