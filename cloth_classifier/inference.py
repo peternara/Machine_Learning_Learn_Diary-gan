@@ -5,7 +5,7 @@ import numpy as np
 
 def variable_with_weight_decay(name, shape, stddev, wd):
     """
-    初始化权重, 如果有wd会进行L2规范化
+    初始化权重, 如果有wd, name会进行L2规范化
     :param name: 别名
     :param shape: 形状
     :param stddev: 高斯标准差
@@ -44,6 +44,12 @@ def inference(image):
         bais = tf.add(conv, baises)
         conv1 = tf.nn.relu(bais, name=scope.name)
         summary_helper(conv1)
+    with tf.variable_scope('drop_out_1') as scope:
+        """
+        弃权层
+        弃权参数: 0.3
+        """
+        h_cov1_drop = tf.nn.dropout(conv1, 0.5, name=scope.name)
 
     with tf.variable_scope('pool_and_norm_1'):
         """
@@ -53,7 +59,7 @@ def inference(image):
         V
         25 * 25 * 64
         """
-        pool1 = tf.nn.max_pool(conv1, ksize=[1, 3, 3, 1], strides=[1, 2, 2, 1], padding='SAME', name='pool1')
+        pool1 = tf.nn.max_pool(h_cov1_drop, ksize=[1, 3, 3, 1], strides=[1, 2, 2, 1], padding='SAME', name='pool1')
         norm1 = tf.nn.lrn(pool1, 4, bias=1.0, alpha=0.001 / 9.0, beta=0.75, name='norm1')
 
     with tf.variable_scope('conv2') as scope:
@@ -71,6 +77,13 @@ def inference(image):
         conv2 = tf.nn.relu(bais, name=scope.name)
         summary_helper(conv2)
 
+    with tf.variable_scope('drop_out_2') as scope:
+        """
+        弃权层
+        弃权参数: 0.3
+        """
+        h_cov2_drop = tf.nn.dropout(conv2, 0.5, name=scope.name)
+
     with tf.variable_scope('pool_and_norm_2'):
         """
         第二次池化和归一化
@@ -79,7 +92,7 @@ def inference(image):
         V
         13 * 13 * 64
         """
-        norm2 = tf.nn.lrn(conv2, 4, bias=1.0, alpha=0.001 / 9.0, beta=0.75, name='norm2')
+        norm2 = tf.nn.lrn(h_cov2_drop, 4, bias=1.0, alpha=0.001 / 9.0, beta=0.75, name='norm2')
         pool2 = tf.nn.max_pool(norm2, ksize=[1, 3, 3, 1], strides=[1, 2, 2, 1], padding='SAME', name='pool2')
 
     with tf.variable_scope('full_connect_1') as scope:
@@ -101,6 +114,12 @@ def inference(image):
         biases = tf.constant(0.1, shape=[256], name='biases')
         fc_1 = tf.nn.relu(tf.add(tf.matmul(flat, weights), biases), name=scope.name)
         summary_helper(fc_1)
+    with tf.variable_scope('drop_out_3') as scope:
+        """
+        弃权层
+        弃权参数: 0.5
+        """
+        h_fc1_drop = tf.nn.dropout(fc_1, 0.5, name=scope.name)
 
     with tf.variable_scope('full_connect_2') as scope:
         """
@@ -112,7 +131,7 @@ def inference(image):
         """
         weights = variable_with_weight_decay('weights', shape=[256, 128], stddev=0.04, wd=0.004)
         biases = tf.constant(0.1, shape=[128], name='biases')
-        fc_2 = tf.nn.relu(tf.matmul(fc_1, weights) + biases, name=scope.name)
+        fc_2 = tf.nn.relu(tf.matmul(h_fc1_drop, weights) + biases, name=scope.name)
         summary_helper(fc_2)
 
     with tf.variable_scope('softmax_linear') as scope:
@@ -139,4 +158,3 @@ def main(arg=None):
 
 if __name__ == '__main__':
     tf.app.run()
-

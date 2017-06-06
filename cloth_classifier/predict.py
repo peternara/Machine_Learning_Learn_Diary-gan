@@ -11,7 +11,7 @@ tf.flags.DEFINE_string('log_dir', './logs/', """logs路径""")
 
 
 def main(arg=None):
-    images, labels = image_loader.read_batch(flag.test_path, flag.test_size)
+    images, labels = image_loader.read_test()
     logits = inference.inference(images)
 
     saver = tf.train.Saver()

@@ -4,6 +4,7 @@ import image_loader
 import inference
 import loss as ls
 
+
 flag = tf.flags.FLAGS
 
 tf.flags.DEFINE_string('save_dir', './saves/', """保存路径""")
@@ -30,7 +31,10 @@ def main(arg=None):
 
     train_step = tf.train.GradientDescentOptimizer(0.1).minimize(loss)
 
-    for i in xrange(10001):
+    correct_prediction = tf.equal(tf.argmax(logits, 1), tf.argmax(labels, 1))
+    accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+
+    for i in xrange(5001):
         if i % 100 == 0:
             print 'step {0}, loss: {1}'.format(i, sess.run(ls.get_loss()))
         sess.run(train_step)
