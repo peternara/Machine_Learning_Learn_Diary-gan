@@ -72,7 +72,7 @@ Figuring out how to optimize
 [ ] Batch normalization
 ---
 
-Trying to use Batch normalization to
+Trying to use Batch normalization to optimize predict Accuracy
 
 
 [ ] GAN. Generative Adversarial Network
