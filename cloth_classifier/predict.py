@@ -1,9 +1,7 @@
 # coding=utf-8
 import tensorflow as tf
 import image_loader
-import inference
-import loss as ls
-
+import inference_predict as inference
 flag = tf.flags.FLAGS
 
 tf.flags.DEFINE_string('save_dir', './saves/', """保存路径""")
