@@ -63,6 +63,10 @@ Add a drop out layer
 
 Accuracy: 0.91
 
+Fixed a predict problem
+
+Accuracy: 0.93
+
 Figuring out how to optimize
 
 [ ] Batch normalization
