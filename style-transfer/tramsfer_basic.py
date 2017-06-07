@@ -77,9 +77,10 @@ def build_net(ntype, nin, nwb=None):
 
 
 def get_weight_bias(vgg_layers, i):
-    weights = vgg_layers[i][0][0][2][0][0]
+    layer = vgg_layers[i][0][0][2][0]
+    weights = layer[0]
     weights = tf.constant(weights)
-    bias = vgg_layers[i][0][0][2][0][1]
+    bias = layer[1]
     bias = tf.constant(np.reshape(bias, (bias.size)))
     return weights, bias
 
