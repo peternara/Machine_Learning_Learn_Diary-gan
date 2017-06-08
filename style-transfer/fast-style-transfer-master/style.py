@@ -150,7 +150,7 @@ def main():
         options.vgg_path
     ]
 
-    for preds, losses, i, epoch in optimize(*args, **kwargs):
+    for preds, losses, i, epoch in optimize.optimize(*args, **kwargs):
         style_loss, content_loss, tv_loss, loss = losses
 
         print('Epoch %d, Iteration: %d, Loss: %s' % (epoch, i, loss))
