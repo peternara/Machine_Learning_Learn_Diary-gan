@@ -13,8 +13,8 @@ STYLE_IMAGE = './from.jpeg'
 # Content image to use.
 CONTENT_IMAGE = './to.JPG'
 # Image dimensions constants.
-IMAGE_WIDTH = 800
-IMAGE_HEIGHT = 600
+IMAGE_WIDTH = 532
+IMAGE_HEIGHT = 640
 COLOR_CHANNELS = 3
 
 ###############################################################################
@@ -175,7 +175,7 @@ def style_loss_func(sess, net):
 def main():
     net = build_vgg19(VGG_Model)
     sess = tf.Session()
-    sess.run(tf.initialize_all_variables())
+    sess.run(tf.global_variables_initializer())
 
     content_img = load_image(CONTENT_IMAGE)
     style_img = load_image(STYLE_IMAGE)
@@ -192,7 +192,7 @@ def main():
     init_img = generate_noise_image(content_img)
 
     train_op = optimizer.minimize(total_loss)
-    sess.run(tf.initialize_all_variables())
+    sess.run(tf.global_variables_initializer())
     sess.run(net['input'].assign(init_img))
 
     for it in range(ITERATIONS):
