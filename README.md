@@ -84,4 +84,8 @@ Trying to understand
 [ ] Styer transfer
 ---
 
-Understanding transfer theory
+1. [X] Understanding transfer theory
+2. [X] Basic usage
+3. [ ] Basic usage - Boost
+3. [ ] Understanding fast style transfer theory
+4. [ ] fast style transfer usage
