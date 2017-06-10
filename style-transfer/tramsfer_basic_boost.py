@@ -6,8 +6,9 @@ import scipy.io
 import scipy.misc
 import tensorflow as tf
 
-# Output folder for the images.
-OUTPUT_DIR = 'output/'
+flag = tf.flags.FLAGS
+# 输出文件夹
+tf.flag.Def
 # Style image to use.
 STYLE_IMAGE = './from.jpeg'
 # Content image to use.
@@ -23,7 +24,7 @@ COLOR_CHANNELS = 3
 # 设置随机噪声图像与内容图像的比率
 NOISE_RATIO = 0.8
 # 设置迭代次数
-ITERATIONS = 1001
+ITERATIONS = 201
 # 设置内容图像与风格图像的权重
 alpha = 1
 beta = 500
