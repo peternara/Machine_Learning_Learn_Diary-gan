@@ -79,7 +79,7 @@ Trying to use Batch normalization to optimize predict Accuracy
 ---
 
 Trying to understand
-
+1. [ ] DCGAN
 
 [ ] Styer transfer
 ---
