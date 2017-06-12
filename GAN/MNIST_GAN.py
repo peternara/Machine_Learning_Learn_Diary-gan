@@ -23,37 +23,63 @@ z_size = 100
 batch_size = 256
 
 
-# generate (model 1)
+# 生成模型 (model 1)
 def build_generator(z_prior):
+    """
+    通过随机噪声产生随机噪声图片
+    :param z_prior: 随机噪声
+    :returns:
+        x_generate: 生成的图片
+        g_params: 1-3层的权重和偏置
+    """
     w1 = tf.Variable(tf.truncated_normal([z_size, h1_size], stddev=0.1), name="g_w1", dtype=tf.float32)
-    b1 = tf.Variable(tf.zeros([h1_size]), name="g_b1", dtype=tf.float32)
+    b1 = tf.Variable(tf.constant(0.1, shape=[h1_size]), name="g_b1", dtype=tf.float32)
     h1 = tf.nn.relu(tf.matmul(z_prior, w1) + b1)
+
     w2 = tf.Variable(tf.truncated_normal([h1_size, h2_size], stddev=0.1), name="g_w2", dtype=tf.float32)
-    b2 = tf.Variable(tf.zeros([h2_size]), name="g_b2", dtype=tf.float32)
+    b2 = tf.Variable(tf.constant(0.1, shape=[h2_size]), name="g_b2", dtype=tf.float32)
     h2 = tf.nn.relu(tf.matmul(h1, w2) + b2)
+
     w3 = tf.Variable(tf.truncated_normal([h2_size, img_size], stddev=0.1), name="g_w3", dtype=tf.float32)
-    b3 = tf.Variable(tf.zeros([img_size]), name="g_b3", dtype=tf.float32)
+    b3 = tf.Variable(tf.constant(0.1, shape=[img_size]), name="g_b3", dtype=tf.float32)
     h3 = tf.matmul(h2, w3) + b3
+
     x_generate = tf.nn.tanh(h3)
+
     g_params = [w1, b1, w2, b2, w3, b3]
+
     return x_generate, g_params
 
 
-# discriminator (model 2)
+# 判别模型 (model 2)
 def build_discriminator(x_data, x_generated, keep_prob):
-    # tf.concat
+    """
+    判别模型
+    :param x_data: 训练集图片
+    :param x_generated: 生成图片
+    :param keep_prob: 弃权保留参数
+    :return:
+    
+    """
+    # 连接训练集和生成数据集
     x_in = tf.concat([x_data, x_generated], 0)
+
     w1 = tf.Variable(tf.truncated_normal([img_size, h2_size], stddev=0.1), name="d_w1", dtype=tf.float32)
-    b1 = tf.Variable(tf.zeros([h2_size]), name="d_b1", dtype=tf.float32)
+    b1 = tf.Variable(tf.constant(0.1, shape=[h2_size]), name="d_b1", dtype=tf.float32)
     h1 = tf.nn.dropout(tf.nn.relu(tf.matmul(x_in, w1) + b1), keep_prob)
+
     w2 = tf.Variable(tf.truncated_normal([h2_size, h1_size], stddev=0.1), name="d_w2", dtype=tf.float32)
-    b2 = tf.Variable(tf.zeros([h1_size]), name="d_b2", dtype=tf.float32)
+    b2 = tf.Variable(tf.constant(0.1, shape=[h1_size]), name="d_b2", dtype=tf.float32)
     h2 = tf.nn.dropout(tf.nn.relu(tf.matmul(h1, w2) + b2), keep_prob)
+
     w3 = tf.Variable(tf.truncated_normal([h1_size, 1], stddev=0.1), name="d_w3", dtype=tf.float32)
-    b3 = tf.Variable(tf.zeros([1]), name="d_b3", dtype=tf.float32)
+    b3 = tf.Variable(tf.constant(0.1, shape=[1]), name="d_b3", dtype=tf.float32)
     h3 = tf.matmul(h2, w3) + b3
+
     y_data = tf.nn.sigmoid(tf.slice(h3, [0, 0], [batch_size, -1], name=None))
+
     y_generated = tf.nn.sigmoid(tf.slice(h3, [batch_size, 0], [-1, -1], name=None))
+
     d_params = [w1, b1, w2, b2, w3, b3]
     return y_data, y_generated, d_params
 
