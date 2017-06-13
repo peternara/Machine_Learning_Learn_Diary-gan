@@ -145,7 +145,7 @@ def train():
     z_sample_val = np.random.normal(0, 1, size=(batch_size, z_size)).astype(np.float32)
 
     steps = 60000 / batch_size
-    for i in range(sess.run(global_step), max_epoch):
+    for i in xrange(sess.run(global_step), max_epoch):
         for j in np.arange(steps):
             #         for j in range(steps):
             print("epoch:%s, iter:%s" % (i, j))
@@ -160,11 +160,12 @@ def train():
             if j % 1 == 0:
                 sess.run(g_trainer,
                          feed_dict={x_data: x_value, z_prior: z_value, keep_prob: np.sum(0.7).astype(np.float32)})
-        x_gen_val = sess.run(x_generated, feed_dict={z_prior: z_sample_val})
-        show_result(x_gen_val, "output/sample{0}.jpg".format(i))
-        z_random_sample_val = np.random.normal(0, 1, size=(batch_size, z_size)).astype(np.float32)
-        x_gen_val = sess.run(x_generated, feed_dict={z_prior: z_random_sample_val})
-        show_result(x_gen_val, "output/random_sample{0}.jpg".format(i))
+        if i % 50 == 0:
+            x_gen_val = sess.run(x_generated, feed_dict={z_prior: z_sample_val})
+            show_result(x_gen_val, "output/sample{0}.jpg".format(i))
+            z_random_sample_val = np.random.normal(0, 1, size=(batch_size, z_size)).astype(np.float32)
+            x_gen_val = sess.run(x_generated, feed_dict={z_prior: z_random_sample_val})
+            show_result(x_gen_val, "output/random_sample{0}.jpg".format(i))
         sess.run(tf.assign(global_step, i + 1))
         saver.save(sess, os.path.join(output_path, "model"), global_step=global_step)
 
