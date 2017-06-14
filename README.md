@@ -1,4 +1,4 @@
-[√] First_cnn_trial/learn.py
+[X] First_cnn_trial/learn.py
 ---------------
 MNIST_identification with CNN
 
@@ -10,7 +10,7 @@ figure out which is the best suit me
 
 **Not Started**
 
-[√] k-means/kmeans.py
+[X] k-means/kmeans.py
 ---
 tensorflow K-means algorithm implement
 
