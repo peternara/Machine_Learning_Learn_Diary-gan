@@ -105,10 +105,13 @@ def show_result(batch_res, fname, grid_size=(8, 8), grid_pad=5):
 def train():
     # load data（mnist手写数据集）
     mnist = input_data.read_data_sets('MNIST_data', one_hot=True)
-
+    # MNIST 原始图片 * 256
     x_data = tf.placeholder(tf.float32, [batch_size, img_size], name="x_data")
+    # 随机噪音
     z_prior = tf.placeholder(tf.float32, [batch_size, z_size], name="z_prior")
+    # 弃权保留率
     keep_prob = tf.placeholder(tf.float32, name="keep_prob")
+
     global_step = tf.Variable(0, name="global_step", trainable=False)
 
     # 创建生成模型
