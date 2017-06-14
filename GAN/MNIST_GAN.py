@@ -76,8 +76,9 @@ def build_discriminator(x_data, x_generated, keep_prob):
     b3 = tf.Variable(tf.constant(0.1, shape=[1]), name="d_b3", dtype=tf.float32)
     h3 = tf.matmul(h2, w3) + b3
 
+    # 取出原始的数据集
     y_data = tf.nn.sigmoid(tf.slice(h3, [0, 0], [batch_size, -1], name=None))
-
+    # 取出生成的数据集
     y_generated = tf.nn.sigmoid(tf.slice(h3, [batch_size, 0], [-1, -1], name=None))
 
     d_params = [w1, b1, w2, b2, w3, b3]
