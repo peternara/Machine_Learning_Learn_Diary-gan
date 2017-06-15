@@ -79,7 +79,8 @@ Trying to use Batch normalization to optimize predict Accuracy
 ---
 
 Trying to understand
-1. [X] dc-gan
+1. [X] gan
+2. [ ] dc-gan
 2. [ ] ac-gan
 
 [ ] Style transfer
