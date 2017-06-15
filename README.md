@@ -79,12 +79,13 @@ Trying to use Batch normalization to optimize predict Accuracy
 ---
 
 Trying to understand
-1. [ ] DCGAN
+1. [X] dc-gan
+2. [ ] ac-gan
 
-[ ] Styer transfer
+[ ] Style transfer
 ---
 
 1. [X] Understanding transfer theory
 2. [X] Basic usage
 3. [ ] Understanding fast style transfer theory
-4. [ ] fast style transfer usage
+4. [ ] Fast Style Transfer usage
