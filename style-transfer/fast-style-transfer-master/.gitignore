@@ -101,3 +101,6 @@ ENV/
 /data/train2014.zip
 /data/imagenet-vgg-verydeep-19.mat
 /.idea/
+/data/*.jpeg
+/data/checkpoint/*
+/examples/test/*
