@@ -1,3 +1,4 @@
+# coding=utf-8
 import datetime
 import os
 
@@ -9,10 +10,9 @@ import ac_gan
 import utils
 
 FLAGS = tf.app.flags.FLAGS
-
-tf.app.flags.DEFINE_string('log_dir', './mnist_log_dir', 'log directory')
-tf.app.flags.DEFINE_string('sample_dir', './samples', 'log directory')
-tf.app.flags.DEFINE_integer('train_steps', 1000, 'number of train steps')
+tf.app.flags.DEFINE_string('log_dir', './mnist_log_dir', 'tensorboard 文件夹')
+tf.app.flags.DEFINE_string('sample_dir', './samples', '训练结果储存文件夹')
+tf.app.flags.DEFINE_integer('train_steps', 1000, '训练次数s')
 
 
 def train():
@@ -20,7 +20,7 @@ def train():
     z = tf.placeholder(tf.float32, [FLAGS.batch_size, FLAGS.z_dim], name='z')
 
     # get images and labels
-    images, labels = ac_gan.inputs(batch_size=FLAGS.batch_size)
+    images, labels = ac_gan.inputs()
 
     # logits
     [

@@ -51,7 +51,7 @@ def fc(x, num_outputs, scope="fc"):
             initializer=tf.truncated_normal_initializer(stddev=0.02))
 
         biases = tf.get_variable(
-            'biases', [num_outputs], initializer=tf.constant_initializer(0.0))
+            'biases', [num_outputs], initializer=tf.constant_initializer(0.1))
 
         output = tf.nn.bias_add(tf.matmul(x, w), biases)
 

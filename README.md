@@ -69,10 +69,10 @@ Accuracy: 0.93
 
 Figuring out how to optimize
 
-[ ] Batch normalization
+[X] Batch normalization
 ---
 
-Trying to use Batch normalization to optimize predict Accuracy
+Use Batch normalization to optimize predict Accuracy
 
 
 [ ] GAN. Generative Adversarial Network
@@ -81,7 +81,8 @@ Trying to use Batch normalization to optimize predict Accuracy
 Trying to understand
 1. [X] gan
 2. [ ] dc-gan
-2. [ ] ac-gan
+3. [X] ac-gan( basic-usage )
+4. [ ] ac-gan with cnn
 
 [ ] Style transfer
 ---
@@ -89,4 +90,12 @@ Trying to understand
 1. [X] Understanding transfer theory
 2. [X] Basic usage
 3. [ ] Understanding fast style transfer theory
-4. [ ] Fast Style Transfer usage
+4. [X] Fast Style Transfer usage
+
+[ ] Baidu classify competition
+---
+
+1. [X] train_sets download -> me
+2. [] coding -> me
+3. [] make test_sets -> me and teammate
+4. [] optimize

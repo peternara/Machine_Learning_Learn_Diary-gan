@@ -4,7 +4,7 @@ This is a tensorflow implementation of the Auxiliary Classifier GAN described in
 
 ## Run
 
-```
+```shell
 python train.py \
 --dataset=mnist \
 --input_height=64 \

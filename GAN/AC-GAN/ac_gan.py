@@ -1,3 +1,4 @@
+# coding=utf-8
 import os
 
 import tensorflow as tf
@@ -7,17 +8,17 @@ import ops
 
 from tfrecords_reader import TFRecordsReader
 
-tf.app.flags.DEFINE_integer('input_height', 64, 'input image height')
-tf.app.flags.DEFINE_integer('input_width', 64, 'input image width')
-tf.app.flags.DEFINE_integer('input_channels', 1, 'image channels')
-tf.app.flags.DEFINE_integer('output_height', 64, 'output image height')
-tf.app.flags.DEFINE_integer('output_width', 64, 'output image width')
-tf.app.flags.DEFINE_integer('z_dim', 100, 'generator input dim')
-tf.app.flags.DEFINE_integer('n_classes', 10, 'number of classes')
-tf.app.flags.DEFINE_boolean('crop', True, 'crop image or not')
-tf.app.flags.DEFINE_integer('batch_size', 64, 'batch size')
-tf.app.flags.DEFINE_float('learning_rate', 0.0002, 'learning rate')
-tf.app.flags.DEFINE_float('beta1', 0.5, 'momentum term of Adam')
+tf.app.flags.DEFINE_integer('input_height', 64, '输入图片高度')
+tf.app.flags.DEFINE_integer('input_width', 64, '输入图片宽度')
+tf.app.flags.DEFINE_integer('input_channels', 1, '图片通道')
+tf.app.flags.DEFINE_integer('output_height', 64, '输出图片高度')
+tf.app.flags.DEFINE_integer('output_width', 64, '输出图片宽度')
+tf.app.flags.DEFINE_integer('z_dim', 100, '噪音数目')
+tf.app.flags.DEFINE_integer('n_classes', 10, '分类数目')
+tf.app.flags.DEFINE_boolean('crop', True, '是否裁剪数据')
+tf.app.flags.DEFINE_integer('batch_size', 64, '批大小')
+tf.app.flags.DEFINE_float('learning_rate', 2e-4, '学习速率')
+tf.app.flags.DEFINE_float('beta1', 0.5, 'Adam动量')
 
 FLAGS = tf.app.flags.FLAGS
 
@@ -25,8 +26,7 @@ FLAGS = tf.app.flags.FLAGS
 def inference(images, labels, z):
     generated_images = generator(z, labels)
     source_logits_real, class_logits_real = discriminator(images, labels)
-    source_logits_fake, class_logits_fake = discriminator(
-        generated_images, labels, reuse=True)
+    source_logits_fake, class_logits_fake = discriminator(generated_images, labels, reuse=True)
 
     return [
         source_logits_real, class_logits_real, source_logits_fake,
@@ -36,31 +36,30 @@ def inference(images, labels, z):
 
 def loss(labels, source_logits_real, class_logits_real, source_logits_fake,
          class_logits_fake, generated_images):
-
     labels_one_hot = tf.one_hot(labels, FLAGS.n_classes)
 
     source_loss_real = tf.reduce_mean(
         tf.nn.sigmoid_cross_entropy_with_logits(
-            source_logits_real, tf.ones_like(source_logits_real)))
+            logits=source_logits_real, labels=tf.ones_like(source_logits_real)))
 
     source_loss_fake = tf.reduce_mean(
         tf.nn.sigmoid_cross_entropy_with_logits(
-            source_logits_fake, tf.zeros_like(source_logits_fake)))
+            logits=source_logits_fake, labels=tf.zeros_like(source_logits_fake)))
 
     g_loss = tf.reduce_mean(
         tf.nn.sigmoid_cross_entropy_with_logits(
-            source_logits_fake, tf.ones_like(source_logits_fake)))
+            logits=source_logits_fake, labels=tf.ones_like(source_logits_fake)))
 
     class_loss_real = tf.reduce_mean(
-        tf.nn.softmax_cross_entropy_with_logits(class_logits_real,
-                                                labels_one_hot))
+        tf.nn.softmax_cross_entropy_with_logits(logits=class_logits_real,
+                                                labels=labels_one_hot))
     class_loss_fake = tf.reduce_mean(
-        tf.nn.softmax_cross_entropy_with_logits(class_logits_fake,
-                                                labels_one_hot))
+        tf.nn.softmax_cross_entropy_with_logits(logits=class_logits_fake,
+                                                labels=labels_one_hot))
 
     d_loss = source_loss_real + source_loss_fake + class_loss_real + class_loss_fake
 
-    g_loss =  g_loss + class_loss_real + class_loss_fake
+    g_loss = g_loss + class_loss_real + class_loss_fake
 
     return d_loss, g_loss
 
@@ -142,12 +141,12 @@ def generator(z, labels):
         labels_one_hot = tf.one_hot(labels, FLAGS.n_classes)
 
         # concat z and labels
-        z_labels = tf.concat(1, [z, labels_one_hot])
+        z_labels = tf.concat([z, labels_one_hot], 1)
 
         # project z and reshape
         oh, ow = FLAGS.output_height, FLAGS.output_width
 
-        z_labels_ = ops.fc(z_labels, 512 * oh / 16 * ow / 16, scope="project")
+        z_labels_ = ops.fc(z_labels, oh / ow * 2, scope="project")
         z_labels_ = tf.reshape(z_labels_, [-1, oh / 16, ow / 16, 512])
 
         # batch norm
@@ -200,10 +199,10 @@ def generator(z, labels):
     return h4
 
 
-def inputs(batch_size=64):
-    crop = FLAGS.crop
-    crop_height, crop_width = FLAGS.input_height, FLAGS.input_width
-    resize_height, resize_width = FLAGS.output_height, FLAGS.output_width
+def inputs():
+    crop = FLAGS.crop  # 是否裁剪图片
+    crop_height, crop_width = FLAGS.input_height, FLAGS.input_width  # 输入的宽高
+    resize_height, resize_width = FLAGS.output_height, FLAGS.output_width  # 输出的宽高
 
     reader = TFRecordsReader(
         image_height=28,
@@ -220,7 +219,7 @@ def inputs(batch_size=64):
         resize_width=resize_height,
         num_examples_per_epoch=64)
 
-    images, labels = reader.inputs(batch_size=64)
+    images, labels = reader.inputs(batch_size=FLAGS.batch_size)
     float_images = tf.cast(images, tf.float32)
     float_images = float_images / 127.5 - 1.0
 
