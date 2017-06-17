@@ -76,12 +76,12 @@ D_b2_aux = tf.Variable(tf.zeros(shape=[y_dim]))  # 偏置初始化
 def discriminator(X):
     """
     判别模型
-    :param X:
-    :return:
+    :param X: 图片
+    :return: op
     """
     D_h1 = tf.nn.relu(tf.matmul(X, D_W1) + D_b1)
-    out_gan = tf.nn.sigmoid(tf.matmul(D_h1, D_W2_gan) + D_b2_gan)
-    out_aux = tf.matmul(D_h1, D_W2_aux) + D_b2_aux
+    out_gan = tf.nn.sigmoid(tf.matmul(D_h1, D_W2_gan) + D_b2_gan)  # 判别真假
+    out_aux = tf.matmul(D_h1, D_W2_aux) + D_b2_aux  # 判别标签
     return out_gan, out_aux
 
 
@@ -97,19 +97,19 @@ def cross_entropy(logit, y):
     return -tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logit, labels=y))
 
 
-G_sample = generator(z, y)
+G_sample = generator(z, y)  # 以随机噪音和标签作为输入, 生成数据集
 
-D_real, C_real = discriminator(X)
-D_fake, C_fake = discriminator(G_sample)
+D_real, C_real = discriminator(X)  # 用真实图片作为输入, 判别真假和标签
+D_fake, C_fake = discriminator(G_sample)  # 用生成图片作为输入, 判别真假和标签
 
-# Cross entropy aux loss
+# 分类模型交叉熵损失
 C_loss = cross_entropy(C_real, y) + cross_entropy(C_fake, y)
 
-# GAN D loss
+# 判别模型真假损失
 D_loss = tf.reduce_mean(tf.log(D_real + eps) + tf.log(1. - D_fake + eps))
 DC_loss = -(D_loss + C_loss)
 
-# GAN's G loss
+# 生成模型损失
 G_loss = tf.reduce_mean(tf.log(D_fake + eps))
 GC_loss = -(G_loss + C_loss)
 
