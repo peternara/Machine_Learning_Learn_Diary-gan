@@ -128,6 +128,9 @@ i = 0
 
 for it in range(1000000):
     X_mb, y_mb = mnist.train.next_batch(mb_size)
+    print y_mb
+
+    sess.run()
     z_mb = sample_z(mb_size, z_dim)
 
     _, DC_loss_curr = sess.run(
@@ -139,6 +142,7 @@ for it in range(1000000):
         [G_solver, GC_loss],
         feed_dict={X: X_mb, y: y_mb, z: z_mb}
     )
+
 
     if it % 1000 == 0:
         idx = np.random.randint(0, 10)
