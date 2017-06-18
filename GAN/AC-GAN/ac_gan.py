@@ -221,6 +221,6 @@ def inputs():
 
     images, labels = reader.inputs(batch_size=FLAGS.batch_size)
     float_images = tf.cast(images, tf.float32)
-    float_images = float_images / 127.5 - 1.0
+    float_images = tf.image.per_image_standardization(float_images)
 
     return float_images, labels
