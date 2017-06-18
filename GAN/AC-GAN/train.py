@@ -12,7 +12,7 @@ import utils
 FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_string('log_dir', './mnist_log_dir', 'tensorboard 文件夹')
 tf.app.flags.DEFINE_string('sample_dir', './samples', '训练结果储存文件夹')
-tf.app.flags.DEFINE_integer('train_steps', 1000, '训练次数s')
+tf.app.flags.DEFINE_integer('train_steps', 1000, '训练次数')
 
 
 def train():
