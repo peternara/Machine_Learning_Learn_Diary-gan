@@ -34,28 +34,38 @@ def inference(images, labels, z):
     ]
 
 
-def loss(labels, source_logits_real, class_logits_real, source_logits_fake,
-         class_logits_fake, generated_images):
+def loss(labels,
+         source_logits_real,
+         class_logits_real,
+         source_logits_fake,
+         class_logits_fake,
+         generated_images):
     labels_one_hot = tf.one_hot(labels, FLAGS.n_classes)
 
     source_loss_real = tf.reduce_mean(
         tf.nn.sigmoid_cross_entropy_with_logits(
-            logits=source_logits_real, labels=tf.ones_like(source_logits_real)))
+            logits=source_logits_real,
+            labels=tf.ones_like(source_logits_real)
+        ))
 
     source_loss_fake = tf.reduce_mean(
         tf.nn.sigmoid_cross_entropy_with_logits(
-            logits=source_logits_fake, labels=tf.zeros_like(source_logits_fake)))
+            logits=source_logits_fake,
+            labels=tf.zeros_like(source_logits_fake)))
 
     g_loss = tf.reduce_mean(
         tf.nn.sigmoid_cross_entropy_with_logits(
-            logits=source_logits_fake, labels=tf.ones_like(source_logits_fake)))
+            logits=source_logits_fake,
+            labels=tf.ones_like(source_logits_fake)))
 
     class_loss_real = tf.reduce_mean(
-        tf.nn.softmax_cross_entropy_with_logits(logits=class_logits_real,
-                                                labels=labels_one_hot))
+        tf.nn.softmax_cross_entropy_with_logits(
+            logits=class_logits_real,
+            labels=labels_one_hot))
     class_loss_fake = tf.reduce_mean(
-        tf.nn.softmax_cross_entropy_with_logits(logits=class_logits_fake,
-                                                labels=labels_one_hot))
+        tf.nn.softmax_cross_entropy_with_logits(
+            logits=class_logits_fake,
+            labels=labels_one_hot))
 
     d_loss = source_loss_real + source_loss_fake + class_loss_real + class_loss_fake
 
@@ -146,7 +156,7 @@ def generator(z, labels):
         # project z and reshape
         oh, ow = FLAGS.output_height, FLAGS.output_width
 
-        z_labels_ = ops.fc(z_labels, oh / ow * 2, scope="project")
+        z_labels_ = ops.fc(z_labels, 512 * oh / 16 * ow / 16, scope="project")
         z_labels_ = tf.reshape(z_labels_, [-1, oh / 16, ow / 16, 512])
 
         # batch norm
@@ -221,6 +231,6 @@ def inputs():
 
     images, labels = reader.inputs(batch_size=FLAGS.batch_size)
     float_images = tf.cast(images, tf.float32)
-    float_images = tf.image.per_image_standardization(float_images)
+    float_images = tf.map_fn(tf.image.per_image_standardization,float_images)
 
     return float_images, labels

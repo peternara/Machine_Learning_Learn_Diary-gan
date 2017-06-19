@@ -24,13 +24,19 @@ def train():
 
     # logits
     [
-        source_logits_real, class_logits_real, source_logits_fake,
-        class_logits_fake, generated_images
+        source_logits_real,
+        class_logits_real,
+        source_logits_fake,
+        class_logits_fake,
+        generated_images
     ] = ac_gan.inference(images, labels, z)
 
     # loss
-    d_loss, g_loss = ac_gan.loss(labels, source_logits_real, class_logits_real,
-                                 source_logits_fake, class_logits_fake,
+    d_loss, g_loss = ac_gan.loss(labels,
+                                 source_logits_real,
+                                 class_logits_real,
+                                 source_logits_fake,
+                                 class_logits_fake,
                                  generated_images)
 
     # train the model
