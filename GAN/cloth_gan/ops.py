@@ -19,3 +19,4 @@ def batch_norm(
         scale=scale,  # 如果下一个操作是线性的, 比如 Relu scale可以为False
         scope=scope
     )
+
