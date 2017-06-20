@@ -72,6 +72,6 @@ if __name__ == "__main__":
     generator = TFRecord_Generator()
     with tf.Session() as sess:
         generator.generate(sess)
-    # generator = TFRecord_Generator(isTrain=False)
-    # with tf.Session() as sess:
-    #     generator.generate(sess)
+    generator = TFRecord_Generator(isTrain=False)
+    with tf.Session() as sess:
+        generator.generate(sess)
