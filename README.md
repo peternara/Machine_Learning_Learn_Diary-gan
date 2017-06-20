@@ -99,3 +99,7 @@ Trying to understand
 2. [] coding -> me
 3. [] make test_sets -> me and teammate
 4. [] optimize
+
+[ ] Cloth Generator by GC-GAN
+---
+programing
