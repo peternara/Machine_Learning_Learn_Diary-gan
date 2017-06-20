@@ -75,14 +75,14 @@ Figuring out how to optimize
 Use Batch normalization to optimize predict Accuracy
 
 
-[ ] GAN. Generative Adversarial Network
+[X] GAN. Generative Adversarial Network
 ---
 
 Trying to understand
 1. [X] gan
-2. [ ] dc-gan
+2. [X] dc-gan
 3. [X] ac-gan( basic-usage )
-4. [ ] ac-gan with cnn
+4. [X] ac-gan with cnn
 
 [ ] Style transfer
 ---
