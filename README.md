@@ -100,6 +100,6 @@ Trying to understand
 3. [] make test_sets -> me and teammate
 4. [] optimize
 
-[ ] Cloth Generator by GC-GAN
+[ ] Cloth Generator with GC-GAN
 ---
 programing
