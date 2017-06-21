@@ -1,8 +1,9 @@
 import tensorflow as tf
 
+
 class ReadRecords(object):
     def __init__(self,
-                 train_path='./tfRecords/0.train.tfrecords',
+                 train_path='./tfRecords/*.train.tfrecords',
                  test_path='./tfRecords/*.test.tfrecords',
                  batch_size=20,
                  width=200,
@@ -25,7 +26,7 @@ class ReadRecords(object):
         labels = []
         for i in xrange(self.batch_size):
             _, example = reader.read(queue=self.file_queue)
-            features = tf.parse_example(example, features={
+            features = tf.parse_single_example(example, features={
                 "label": tf.FixedLenFeature([], tf.int64),
                 "image_raw": tf.FixedLenFeature([], tf.string)
             })
@@ -35,3 +36,11 @@ class ReadRecords(object):
             images.append(image)
             labels.append(label)
         return images, labels
+
+
+if __name__ == "__main__":
+    reader = ReadRecords()
+    sess = tf.Session()
+    tf.train.start_queue_runners(sess=sess)
+    image, label = reader.read()
+    print sess.run(label)

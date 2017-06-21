@@ -1,7 +1,4 @@
 import tensorflow as tf
-import matplotlib.pyplot as plt
-import numpy as np
-
 
 class TFRecord_Generator(object):
     def __init__(self,
@@ -62,7 +59,6 @@ class TFRecord_Generator(object):
             writer = tf.python_io.TFRecordWriter('./tfRecords/{}.{}.tfrecords'.format(i, train_bath))
             self.__write_tfrecode(writer, image.tostring(), label)
             print "reading {}".format(i)
-            exit()
 
     def generate_test(self, sess):
         tf.train.start_queue_runners(sess=sess)
@@ -72,6 +68,6 @@ if __name__ == "__main__":
     generator = TFRecord_Generator()
     with tf.Session() as sess:
         generator.generate(sess)
-    generator = TFRecord_Generator(isTrain=False)
-    with tf.Session() as sess:
-        generator.generate(sess)
+        # generator = TFRecord_Generator(isTrain=False)
+        # with tf.Session() as sess:
+        #     generator.generate(sess)
