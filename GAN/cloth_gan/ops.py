@@ -4,18 +4,20 @@ import numpy as np
 
 
 def batch_norm(
-        x, is_Train, scope="batch_norm"):
+        x, is_train, scope="batch_norm"):
     """
     披标准化
     :param x: Tensor
-    :param is_Train:  是否是训练, 训练和测试必须指定
+    :param is_train:  是否是训练, 训练和测试必须指定
     :param scope: 操作名字
     :return: op
     """
     return tf.contrib.layers.batch_norm(
         x,
-        is_Train=is_Train,
-        scale=True,  # 如果下一个操作是线性的, 比如 Relu scale可以为False
+        is_training=is_train,
+        updates_collections=None,
+        scale=False,  # 如果下一个操作是线性的, 比如 Relu scale可以为False
+        reuse=False,
         scope=scope
     )
 
@@ -27,8 +29,8 @@ def weight_init(shape, decay=0.0):
     :param decay: 如果存在, 会进行l2_loss
     :return: Tensor
     """
-    weight = tf.get_variable('weight', tf.truncated_normal(shape, stddev=1e-4))
-    if not decay == 0.0:
+    weight = tf.get_variable('weight', shape, initializer=tf.truncated_normal_initializer(stddev=4e-3))
+    if decay is not None:
         l2_loss = tf.multiply(tf.nn.l2_loss(weight), decay, name='weight_loss')
         tf.add_to_collection('l2_loss', l2_loss)
     return weight
@@ -41,21 +43,22 @@ def biase_init(shape, value=0.1):
     :param value: 初始值大小
     :return: Tensor
     """
-    biase = tf.get_variable('biase', tf.constant(value, shape=shape))
+    biase = tf.get_variable('biase', shape,initializer=tf.constant_initializer(0.1))
     return biase
 
 
-def full_connect(x, shape_out, scope='full_connect'):
+def full_connect(x, num_out, scope='full_connect', decay=0.0):
     """
     全连接层
     :param x: 全连接输入
-    :param shape_out: 全连接输出大小
+    :param num_out: 全连接输出大小
     :param scope: scope名
+    :param decay: l2_loss 参数
     :return: Option
     """
     with tf.variable_scope(scope):
-        weight = weight_init(shape=[x.get_shape()[-1], shape_out], decay=4e-3)
-        biase = biase_init([shape_out])
+        weight = weight_init(shape=[x.get_shape()[-1], num_out], decay=decay)
+        biase = biase_init([num_out])
         output = tf.nn.bias_add(tf.matmul(x, weight), biase)
         return output
 
