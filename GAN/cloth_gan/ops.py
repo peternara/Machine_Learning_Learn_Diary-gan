@@ -4,19 +4,18 @@ import numpy as np
 
 
 def batch_norm(
-        x, is_Train, scale=False, scope="batch_norm"):
+        x, is_Train, scope="batch_norm"):
     """
     披标准化
     :param x: Tensor
     :param is_Train:  是否是训练, 训练和测试必须指定
-    :param scale: 下一个操作是否是线性
     :param scope: 操作名字
     :return: op
     """
     return tf.contrib.layers.batch_norm(
         x,
         is_Train=is_Train,
-        scale=scale,  # 如果下一个操作是线性的, 比如 Relu scale可以为False
+        scale=True,  # 如果下一个操作是线性的, 比如 Relu scale可以为False
         scope=scope
     )
 
@@ -95,3 +94,7 @@ def conv_2d_transpose(x, out_shape, kernel_size=5, stride=2, scope='conv_2d_tran
         deconv = tf.nn.conv2d_transpose(x, weight, out_shape, strides=[1, stride, stride], padding="SAME")
         output = tf.nn.bias_add(deconv, biase)
         return output
+
+
+def leaky_relu(x, leakey=0.2):
+    return tf.maximum(x, x * leakey)
