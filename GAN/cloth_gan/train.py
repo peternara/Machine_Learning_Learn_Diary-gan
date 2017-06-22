@@ -1,7 +1,6 @@
 # coding=utf-8
 import tensorflow as tf
 import numpy as np
-import ops
 import layer
 import read_records
 
@@ -11,6 +10,7 @@ tf.flags.DEFINE_integer('image_height', 200, """图片高度""")
 tf.flags.DEFINE_integer('image_width', 200, """图片宽度""")
 tf.flags.DEFINE_integer('noise_size', 100, """噪声大小""")
 tf.flags.DEFINE_integer('train_steps', 1000, """训练次数""")
+tf.flags.DEFINE_float('learn_rate', 3e-3, """训练次数""")
 
 
 def main(args=None):
@@ -26,18 +26,17 @@ def main(args=None):
                                 )
     d_optimizer, g_optimazer = layer.train(d_loss, g_loss)
 
-    sess = tf.InteractiveSession()
-    sess.run(tf.global_variables_initializer())
-    tf.train.start_queue_runners(sess=sess)
+    # sess = tf.InteractiveSession()
+    # sess.run(tf.global_variables_initializer())
+    # tf.train.start_queue_runners(sess=sess)
     # saver = tf.train.Saver()
     # summary = tf.summary.FileWriter('logs')
-    reader = read_records.ReadRecords()
-    for step in xrange(flags.train_steps):
-        random_z = np.random.uniform(-1, 1, size=[flags.batch_size, flags.noise_size]).astype(np.float32)
-        image_read, label_read = reader.read()
-        d_loss, g_loss = sess.run([d_optimizer, g_optimazer],
-                                  feed_dict={z: random_z, image: image_read, label: label_read})
-        print "train steep: {}, d_loss: {}, g_loss: {}".format(step, d_loss, g_loss)
+    # reader = read_records.ReadRecords()
+    # for step in xrange(flags.train_steps):
+    #     random_z = np.random.uniform(-1, 1, size=[flags.batch_size, flags.noise_size]).astype(np.float32)
+    #     image_read, label_read = reader.read()
+    #     sess.run([d_optimizer, g_optimazer, g_optimazer], feed_dict={z: random_z, image: image_read, label: label_read})
+    #     print "train steep: {}, d_loss: {}, g_loss: {}".format(step, d_loss, g_loss)
 
 
 if __name__ == "__main__":

@@ -42,6 +42,7 @@ def loss(labels,
          generated_images):
     labels_one_hot = tf.one_hot(labels, FLAGS.n_classes)
 
+    #   判断图片真假损失
     source_loss_real = tf.reduce_mean(
         tf.nn.sigmoid_cross_entropy_with_logits(
             logits=source_logits_real,
@@ -52,12 +53,12 @@ def loss(labels,
         tf.nn.sigmoid_cross_entropy_with_logits(
             logits=source_logits_fake,
             labels=tf.zeros_like(source_logits_fake)))
-
+    #   生成图片损失
     g_loss = tf.reduce_mean(
         tf.nn.sigmoid_cross_entropy_with_logits(
             logits=source_logits_fake,
             labels=tf.ones_like(source_logits_fake)))
-
+    #   判断图片类别损失
     class_loss_real = tf.reduce_mean(
         tf.nn.softmax_cross_entropy_with_logits(
             logits=class_logits_real,

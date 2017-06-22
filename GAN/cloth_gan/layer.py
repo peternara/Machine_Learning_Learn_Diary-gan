@@ -5,8 +5,8 @@ import ops
 flags = tf.flags.FLAGS
 
 
-def discriminator(image):
-    with tf.variable_scope('discriminator'):
+def discriminator(image, reuse=False):
+    with tf.variable_scope('discriminator', reuse=reuse):
         conv_1 = ops.conv_2d(image, 64, scope='conv_1')
         relu_1 = ops.leaky_relu(conv_1)
 
@@ -38,7 +38,8 @@ def generator(z, label):
         image_height = flags.image_height
 
         z_label = ops.full_connect(z_label, 512 * image_width / 20 * image_height / 20)  # 上采样 把label上采样到
-        z_label = tf.reshape(z_label, [flags.batch_size, image_width / 20, image_height / 20, 512])
+        z_label = tf.reshape(z_label, [-1, image_width / 20, image_height / 20, 512])
+
         z_label_norm = ops.batch_norm(z_label, is_train=True)
 
         relu_0 = tf.nn.relu(z_label_norm)
@@ -67,15 +68,14 @@ def generator(z, label):
 def inference(image, label, z):
     generate_image = generator(z, label)
     real_logits, real_classes = discriminator(image)
-    fake_logits, fake_classes = discriminator(generate_image)
+    fake_logits, fake_classes = discriminator(generate_image, reuse=True)
 
     return real_logits, real_classes, fake_logits, fake_classes
 
 
 def loss(label, source_logits_real, class_logits_real, source_logits_fake, class_logits_fake):
-    label_one_hot = tf.one_hot(label, 2)
-
     #  图片真假判断损失
+    label = tf.cast(label, tf.float32)
     source_logits_loss_real = tf.reduce_mean(
         tf.nn.softmax_cross_entropy_with_logits(
             logits=source_logits_real,
@@ -101,17 +101,16 @@ def loss(label, source_logits_real, class_logits_real, source_logits_fake, class
     class_loss_real = tf.reduce_mean(
         tf.nn.softmax_cross_entropy_with_logits(
             logits=class_logits_real,
-            labels=label_one_hot
+            labels=label
         )
     )
 
     class_loss_fake = tf.reduce_mean(
         tf.nn.softmax_cross_entropy_with_logits(
             logits=class_logits_fake,
-            labels=label_one_hot
+            labels=label
         )
     )
-
     dc_loss = class_loss_real + class_loss_fake
     d_loss = source_logits_loss_real + source_logits_loss_fake + dc_loss
     g_loss = g_loss + dc_loss
@@ -125,7 +124,6 @@ def train(d_loss, g_loss):
     g_vars = tf.get_collection(
         tf.GraphKeys.TRAINABLE_VARIABLES, scope="generator"
     )
-
     d_optimizer = tf.train.AdamOptimizer(flags.learn_rate).minimize(d_loss, var_list=d_vars)
     g_optimizer = tf.train.AdamOptimizer(flags.learn_rate).minimize(g_loss, var_list=g_vars)
     return d_optimizer, g_optimizer

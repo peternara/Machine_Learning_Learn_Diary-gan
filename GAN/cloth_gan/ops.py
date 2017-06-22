@@ -43,7 +43,7 @@ def biase_init(shape, value=0.1):
     :param value: 初始值大小
     :return: Tensor
     """
-    biase = tf.get_variable('biase', shape,initializer=tf.constant_initializer(0.1))
+    biase = tf.get_variable('biase', shape, initializer=tf.constant_initializer(0.1))
     return biase
 
 
@@ -94,7 +94,7 @@ def conv_2d_transpose(x, out_shape, kernel_size=5, stride=2, scope='conv_2d_tran
     with tf.variable_scope(scope):
         weight = weight_init([kernel_size, kernel_size, out_shape[-1], x.get_shape()[-1]])
         biase = biase_init(out_shape[-1])
-        deconv = tf.nn.conv2d_transpose(x, weight, out_shape, strides=[1, stride, stride], padding="SAME")
+        deconv = tf.nn.conv2d_transpose(x, weight, out_shape, strides=[1, stride, stride, 1], padding="SAME")
         output = tf.nn.bias_add(deconv, biase)
         return output
 
