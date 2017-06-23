@@ -8,7 +8,7 @@ flags = tf.flags.FLAGS
 # tf.flags.DEFINE_integer('batch_size', 20, """批大小""")
 # tf.flags.DEFINE_integer('image_height', 256, """图片高度""")
 # tf.flags.DEFINE_integer('image_width', 256, """图片宽度""")
-tf.flags.DEFINE_integer('noise_size', 100, """噪声大小""")
+tf.flags.DEFINE_integer('noise_size', 500, """噪声大小""")
 tf.flags.DEFINE_integer('train_steps', 1000, """训练次数""")
 tf.flags.DEFINE_float('learn_rate', 1e-3, """训练速率""")
 tf.flags.DEFINE_float('beta1', 0.5, """Adam 动量""")
