@@ -33,7 +33,7 @@ def main(args=None):
     tf.train.start_queue_runners(sess=sess)
     g_loss_save = tf.summary.scalar('g_loss', g_loss)
     d_loss_save = tf.summary.scalar('d_loss', d_loss)
-    saver = tf.train.Saver()
+    saver = tf.train.Saver(keep_checkpoint_every_n_hours=1)
     summary = tf.summary.FileWriter('logs')
     for step in xrange(flags.train_steps):
         random_z = np.random.uniform(-1, 1, size=[flags.batch_size, flags.noise_size]).astype(np.float32)
