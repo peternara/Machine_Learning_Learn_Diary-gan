@@ -73,7 +73,7 @@ def inference(image, label, z):
 
 def loss(label, source_logits_real, class_logits_real, source_logits_fake, class_logits_fake):
     #  图片真假判断损失
-    label = tf.cast(label,tf.float32)
+    label = tf.cast(label, tf.float32)
     source_logits_loss_real = tf.reduce_mean(
         tf.nn.sigmoid_cross_entropy_with_logits(
             logits=source_logits_real,
@@ -122,6 +122,6 @@ def train(d_loss, g_loss):
     g_vars = tf.get_collection(
         tf.GraphKeys.TRAINABLE_VARIABLES, scope="generator"
     )
-    d_optimizer = tf.train.AdamOptimizer(flags.learn_rate).minimize(d_loss, var_list=d_vars)
-    g_optimizer = tf.train.AdamOptimizer(flags.learn_rate).minimize(g_loss, var_list=g_vars)
+    d_optimizer = tf.train.AdamOptimizer(flags.learn_rate, beta1=flags.beta1).minimize(d_loss, var_list=d_vars)
+    g_optimizer = tf.train.AdamOptimizer(flags.learn_rate, beta1=flags.beta1).minimize(g_loss, var_list=g_vars)
     return d_optimizer, g_optimizer
