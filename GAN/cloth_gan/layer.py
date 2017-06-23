@@ -25,7 +25,7 @@ def discriminator(image, reuse=False):
         relu_4_flat = tf.reshape(relu_4, [flags.batch_size, -1])
 
         source_logits = ops.full_connect(relu_4_flat, 1, scope='source_logits')
-        class_logits = ops.full_connect(relu_4_flat, 2, scope='class_logits')
+        class_logits = ops.full_connect(relu_4_flat, 1, scope='class_logits')
 
         return source_logits, class_logits
 
@@ -37,13 +37,12 @@ def generator(z, label):
         image_width = flags.image_width
         image_height = flags.image_height
 
-        z_label = ops.full_connect(z_label, 512 * image_width / 20 * image_height / 20)  # 上采样 把label上采样到
-        z_label = tf.reshape(z_label, [-1, image_width / 20, image_height / 20, 512])
+        z_label = ops.full_connect(z_label, 512 * image_width / 16 * image_height / 16)  # 上采样 把label上采样
+        z_label = tf.reshape(z_label, [flags.batch_size, image_width / 16, image_height / 16, 512])
 
         z_label_norm = ops.batch_norm(z_label, is_train=True)
 
         relu_0 = tf.nn.relu(z_label_norm)
-
         decove_1 = ops.conv_2d_transpose(relu_0, [flags.batch_size, image_width / 8, image_height / 8, 256],
                                          scope='deconv_1')
         decove_1_norm = ops.batch_norm(decove_1, True, scope="batch_norm_1")
@@ -69,21 +68,20 @@ def inference(image, label, z):
     generate_image = generator(z, label)
     real_logits, real_classes = discriminator(image)
     fake_logits, fake_classes = discriminator(generate_image, reuse=True)
-
-    return real_logits, real_classes, fake_logits, fake_classes
+    return real_logits, real_classes, fake_logits, fake_classes, generate_image
 
 
 def loss(label, source_logits_real, class_logits_real, source_logits_fake, class_logits_fake):
     #  图片真假判断损失
-    label = tf.cast(label, tf.float32)
+    label = tf.cast(label,tf.float32)
     source_logits_loss_real = tf.reduce_mean(
-        tf.nn.softmax_cross_entropy_with_logits(
+        tf.nn.sigmoid_cross_entropy_with_logits(
             logits=source_logits_real,
             labels=tf.ones_like(source_logits_real)
         )
     )
     source_logits_loss_fake = tf.reduce_mean(
-        tf.nn.softmax_cross_entropy_with_logits(
+        tf.nn.sigmoid_cross_entropy_with_logits(
             logits=source_logits_fake,
             labels=tf.zeros_like(source_logits_fake)
         )
@@ -91,7 +89,7 @@ def loss(label, source_logits_real, class_logits_real, source_logits_fake, class
 
     #  生成模型损失
     g_loss = tf.reduce_mean(
-        tf.nn.softmax_cross_entropy_with_logits(
+        tf.nn.sigmoid_cross_entropy_with_logits(
             logits=source_logits_fake,
             labels=tf.ones_like(source_logits_fake)
         )
@@ -99,14 +97,14 @@ def loss(label, source_logits_real, class_logits_real, source_logits_fake, class
 
     #  类型判断损失
     class_loss_real = tf.reduce_mean(
-        tf.nn.softmax_cross_entropy_with_logits(
+        tf.nn.sigmoid_cross_entropy_with_logits(
             logits=class_logits_real,
             labels=label
         )
     )
 
     class_loss_fake = tf.reduce_mean(
-        tf.nn.softmax_cross_entropy_with_logits(
+        tf.nn.sigmoid_cross_entropy_with_logits(
             logits=class_logits_fake,
             labels=label
         )

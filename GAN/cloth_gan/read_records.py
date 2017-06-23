@@ -1,13 +1,18 @@
+# coding=utf-8
 import tensorflow as tf
 
+flags = tf.flags.FLAGS
+tf.flags.DEFINE_integer('batch_size', 20, """批大小""")
+tf.flags.DEFINE_integer('image_height', 256, """图片高度""")
+tf.flags.DEFINE_integer('image_width', 256, """图片宽度""")
 
 class ReadRecords(object):
     def __init__(self,
                  train_path='./tfRecords/*.train.tfrecords',
                  test_path='./tfRecords/*.test.tfrecords',
-                 batch_size=20,
-                 width=200,
-                 height=200,
+                 batch_size=flags.batch_size,
+                 width=flags.image_height,
+                 height=flags.image_width,
                  isTrain=True,
                  shuffer=True):
         self.train_path = train_path
@@ -31,10 +36,10 @@ class ReadRecords(object):
                 "image_raw": tf.FixedLenFeature([], tf.string)
             })
             image = tf.decode_raw(features['image_raw'], tf.float32)
-            image = tf.reshape(image, [200, 200, 3])
+            image = tf.reshape(image, [flags.image_height, flags.image_width, 3])
             label = features['label']
             images.append(image)
-            labels.append(label)
+            labels.append([label])
         return images, labels
 
 

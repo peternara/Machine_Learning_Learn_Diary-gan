@@ -1,4 +1,11 @@
+# coding=utf-8
 import tensorflow as tf
+
+flags = tf.flags.FLAGS
+tf.flags.DEFINE_integer('batch_size', 20, """批大小""")
+tf.flags.DEFINE_integer('image_height', 256, """图片高度""")
+tf.flags.DEFINE_integer('image_width', 256, """图片宽度""")
+
 
 class TFRecord_Generator(object):
     def __init__(self,
@@ -7,8 +14,8 @@ class TFRecord_Generator(object):
                  isTrain=True,
                  crop_resize=True,
                  standarlizing=True,
-                 width=200,
-                 height=200,
+                 width=flags.image_width,
+                 height=flags.image_height,
                  ):
         if isTrain:
             file_names = tf.gfile.Glob(train_path)
@@ -60,14 +67,15 @@ class TFRecord_Generator(object):
             self.__write_tfrecode(writer, image.tostring(), label)
             print "reading {}".format(i)
 
-    def generate_test(self, sess):
-        tf.train.start_queue_runners(sess=sess)
+
+def main(arg=None):
+    # generator = TFRecord_Generator()
+    # with tf.Session() as sess:
+    #     generator.generate(sess)
+    generator = TFRecord_Generator(isTrain=False)
+    with tf.Session() as sess:
+        generator.generate(sess)
 
 
 if __name__ == "__main__":
-    generator = TFRecord_Generator()
-    with tf.Session() as sess:
-        generator.generate(sess)
-        # generator = TFRecord_Generator(isTrain=False)
-        # with tf.Session() as sess:
-        #     generator.generate(sess)
+    tf.app.run()
