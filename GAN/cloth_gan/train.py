@@ -31,16 +31,24 @@ def main(args=None):
     sess.run(tf.global_variables_initializer())
     reader = read_records.ReadRecords()
     tf.train.start_queue_runners(sess=sess)
-    # saver = tf.train.Saver()
+    g_loss_save = tf.summary.scalar('g_loss', g_loss)
+    d_loss_save = tf.summary.scalar('d_loss', d_loss)
+    saver = tf.train.Saver()
     summary = tf.summary.FileWriter('logs')
     for step in xrange(flags.train_steps):
         random_z = np.random.uniform(-1, 1, size=[flags.batch_size, flags.noise_size]).astype(np.float32)
         image_read, label_read = sess.run(reader.read())
         sess.run([d_optimizer, g_optimazer, g_optimazer], feed_dict={z: random_z, image: image_read, label: label_read})
-        gloss, dloss = sess.run([g_loss, d_loss], feed_dict={z: random_z, image: image_read, label: label_read})
-        print "train steep: {}, d_loss: {}, g_loss: {}".format(step, dloss, gloss)
-        if step % 10 == 0:
-            tf.summary.image('generate_image', generate_image, max_outputs=100)
+
+        if step % 15 == 0:
+            image_save = tf.summary.image('generate_image', generate_image, max_outputs=100)
+            merged = tf.summary.merge([image_save, g_loss_save, d_loss_save])
+        else:
+            merged = tf.summary.merge([g_loss_save, d_loss_save])
+        merged = sess.run(merged, feed_dict={z: random_z, image: image_read, label: label_read})
+        summary.add_summary(merged, step)
+        print "train steep: {}".format(step)
+    saver.save(sess=sess, save_path='saves')
 
 
 if __name__ == "__main__":
