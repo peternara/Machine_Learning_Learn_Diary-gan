@@ -100,6 +100,7 @@ Trying to understand
 3. [] make test_sets -> me and teammate
 4. [] optimize
 
-[ ] Cloth Generator with GC-GAN
+[x] Cloth Generator with GC-GAN
 ---
-programingsl
+running in
+<http://59.67.107.117:3028/>
