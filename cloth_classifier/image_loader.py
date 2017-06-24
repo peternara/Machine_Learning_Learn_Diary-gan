@@ -44,7 +44,7 @@ def read_batch(path=flag.train_path, batch_size=flag.batch_size):
     for i in xrange(batch_size):
         read = reader.read(file_queue)
         image = tf.image.decode_jpeg(read[1], channels=3)
-        image = tf.image.resize_images(image, [flag.image_width, flag.image_height]) # 变形
+        image = tf.image.resize_images(image, [flag.image_width, flag.image_height])  # 变形
         # image = tf.random_crop(image, [flag.image_width, flag.image_height, 3])  # 随机裁剪
         image = tf.image.random_brightness(image, max_delta=63)
         image = tf.image.per_image_standardization(image)
@@ -83,6 +83,12 @@ def read_test(path=flag.test_path, batch_size=flag.test_size):
         label = tf.one_hot(label, 2)
         labels.append(label)
     return raws, labels
+
+
+def read_queue(path):
+    reader = tf.WholeFileReader()
+    path_queue = tf.train.input_producer(path)
+    return path_queue, reader
 
 
 def main(arg=None):
