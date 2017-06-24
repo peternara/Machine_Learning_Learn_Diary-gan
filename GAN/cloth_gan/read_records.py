@@ -8,8 +8,8 @@ tf.flags.DEFINE_integer('image_width', 256, """图片宽度""")
 
 class ReadRecords(object):
     def __init__(self,
-                 train_path='./tfRecords/*.train.tfrecords',
-                 test_path='./tfRecords/*.test.tfrecords',
+                 train_path,
+                 test_path,
                  batch_size=flags.batch_size,
                  width=flags.image_height,
                  height=flags.image_width,
