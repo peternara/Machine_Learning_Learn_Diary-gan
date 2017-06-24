@@ -104,3 +104,6 @@ Trying to understand
 ---
 running in
 <http://59.67.107.117:3028/>
+
+[X] Aliyun machine learning platform script
+1. [X] image resizer
