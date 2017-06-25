@@ -71,7 +71,7 @@ def eval_once(saver, summary_writer, top_k_op, summary_op):
       summary_op: Summary op.
     """
     with tf.Session() as sess:
-        ckpt = tf.train.get_checkpoint_state(FLAGS.checkpoint_dir)
+        ckpt = tf.train.get_checkpoint_state(FLAGS.checkpointDir)
         if ckpt and ckpt.model_checkpoint_path:
             # Restores from checkpoint
             saver.restore(sess, ckpt.model_checkpoint_path)

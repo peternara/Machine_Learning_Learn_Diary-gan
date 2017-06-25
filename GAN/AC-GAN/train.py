@@ -73,7 +73,7 @@ def train():
                 test_images = sess.run(
                     generated_images, feed_dict={z: random_z})
 
-                image_path = os.path.join(FLAGS.sample_dir,
+                image_path = os.path.join(FLAGS.buckets_local,
                                           "sampled_images_%d.jpg" % step)
 
                 utils.grid_plot(test_images, [8, 8], image_path)

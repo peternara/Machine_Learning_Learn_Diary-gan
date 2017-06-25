@@ -86,3 +86,4 @@ Session.vim
 .netrwhist
 *~
 
+/data/*

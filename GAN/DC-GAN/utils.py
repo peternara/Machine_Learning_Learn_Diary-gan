@@ -2,17 +2,17 @@
 Some codes from https://github.com/Newmu/dcgan_code
 """
 from __future__ import division
-import math
-import json
-import random
-import pprint
-import scipy.misc
-import numpy as np
-from time import gmtime, strftime
-from six.moves import xrange
 
+import math
+import pprint
+import random
+from time import gmtime, strftime
+
+import numpy as np
+import scipy.misc
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
+from six.moves import xrange
 
 pp = pprint.PrettyPrinter()
 
@@ -166,8 +166,6 @@ def to_json(output_path, *layers):
 
 
 def make_gif(images, fname, duration=2, true_image=False):
-    import moviepy.editor as mpy
-
     def make_frame(t):
         try:
             x = images[int(len(images) / duration * t)]

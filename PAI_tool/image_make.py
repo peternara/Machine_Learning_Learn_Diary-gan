@@ -1,15 +1,15 @@
 # coding=utf-8
 import tensorflow as tf
-import pylab as plt
-
+import matplotlib.pyplot as plt
+import os
 flags = tf.flags.FLAGS
 
-# tf.flags.DEFINE_string('buckets', './', "输入目录")
-# tf.flags.DEFINE_string('stdoutDir', './', '输出目录')
+tf.flags.DEFINE_string('buckets', '/Users/wanqianjun/Desktop/机器学习/tensorflow/cloth_classifier/classify/', "输入目录")
+tf.flags.DEFINE_string('stdoutDir', '/Users/wanqianjun/Desktop/机器学习/tensorflow/GAN/DC-GAN/sample_dir/', '输出目录')
 
 
-tf.flags.DEFINE_string('buckets', 'oss://mlearn.oss-cn-shanghai-internal.aliyuncs.com/classify/', "输入目录")
-tf.flags.DEFINE_string('stdoutDir', 'oss://mlearn.oss-cn-shanghai-internal.aliyuncs.com/classify_resize/stdout/', '输出目录')
+# tf.flags.DEFINE_string('buckets', 'oss://mlearn.oss-cn-shanghai-internal.aliyuncs.com/classify/', "输入目录")
+# tf.flags.DEFINE_string('stdoutDir', 'oss://mlearn.oss-cn-shanghai-internal.aliyuncs.com/classify_resize/stdout/', '输出目录')
 
 
 def main(args=None):
@@ -26,8 +26,9 @@ def main(args=None):
     for step in xrange(len(files)):
         name_read, image_read = sess.run([filename, image])
         plt.imshow(image_read)
-        plt.imsave(flags.stdoutDir + name_read, image_read)
+        plt.imsave(flags.stdoutDir + os.path.split(name_read)[-1], image_read)
         print step
+
 
 if __name__ == "__main__":
     tf.app.run()
