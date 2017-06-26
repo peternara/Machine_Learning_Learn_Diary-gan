@@ -22,9 +22,9 @@ flags.DEFINE_string("checkpointDir", "checkpoint_dir/", "模型保存路径")
 flags.DEFINE_string("summaryDir", "logs/", "TensorBoard路径")
 flags.DEFINE_string("local", "data/sample_dir/", "图片储存路径")
 flags.DEFINE_string("dataset", "sample_dir", "数据集名称")
-flags.DEFINE_boolean("train", False, "是否是训练")
+flags.DEFINE_boolean("train", True, "是否是训练")
 flags.DEFINE_boolean("crop", False, "是否裁剪, 如果训练的时候, 建议为True, 如果是测试的时候, 建议为False")
-flags.DEFINE_boolean("visualize", True, "是否进行可视化")
+flags.DEFINE_boolean("visualize", False, "是否进行可视化")
 FLAGS = flags.FLAGS
 
 
@@ -41,11 +41,7 @@ def main(_):
     if not os.path.exists(FLAGS.local):
         os.makedirs(FLAGS.local)
 
-    run_config = tf.ConfigProto()
-    run_config.gpu_options.allow_growth = True
-    #  这里意思是 缓慢的增加显存需求, 不是一开始就占用所有的显存
-
-    with tf.Session(config=run_config) as sess:
+    with tf.Session() as sess:
 
         dcgan = DCGAN(
             sess,
@@ -68,7 +64,7 @@ def main(_):
         else:
             if not dcgan.load(FLAGS.checkpointDir)[0]:
                 raise Exception("[!] Train a model first, then run test mode")
-            option = 4
+            option = 1
             visualize(sess, dcgan, FLAGS, option)
 
 

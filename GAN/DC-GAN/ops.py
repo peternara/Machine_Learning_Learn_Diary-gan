@@ -6,12 +6,9 @@ histogram_summary = tf.summary.histogram
 merge_summary = tf.summary.merge
 SummaryWriter = tf.summary.FileWriter
 
-if "concat_v2" in dir(tf):
-    def concat(tensors, axis, *args, **kwargs):
-        return tf.concat_v2(tensors, axis, *args, **kwargs)
-else:
-    def concat(tensors, axis, *args, **kwargs):
-        return tf.concat(tensors, axis, *args, **kwargs)
+
+def concat(tensors, axis, *args, **kwargs):
+    return tf.concat(tensors, axis, *args, **kwargs)
 
 
 class batch_norm(object):
@@ -64,15 +61,8 @@ def deconv2d(input_, output_shape,
         w = tf.get_variable('w', [k_h, k_w, output_shape[-1], input_.get_shape()[-1]],
                             initializer=tf.random_normal_initializer(stddev=stddev))
 
-        try:
-            deconv = tf.nn.conv2d_transpose(input_, w, output_shape=output_shape,
-                                            strides=[1, d_h, d_w, 1])
-
-        # Support for verisons of TensorFlow before 0.7.0
-        except AttributeError:
-            deconv = tf.nn.deconv2d(input_, w, output_shape=output_shape,
-                                    strides=[1, d_h, d_w, 1])
-
+        deconv = tf.nn.conv2d_transpose(input_, w, output_shape=output_shape,
+                                        strides=[1, d_h, d_w, 1])
         biases = tf.get_variable('biases', [output_shape[-1]], initializer=tf.constant_initializer(0.0))
         deconv = tf.reshape(tf.nn.bias_add(deconv, biases), deconv.get_shape())
 

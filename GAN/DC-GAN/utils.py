@@ -180,8 +180,8 @@ def make_gif(images, fname, duration=2, true_image=False):
             return ((x + 1) / 2 * 255).astype(np.uint8)
 
     clip = mpy.VideoClip(make_frame, duration=duration)
-    # clip.write_gif(fname, fps=len(images) / duration)
-    clip.write_gif(fname, fps=25)
+    clip.write_gif(fname, fps=len(images) / duration)
+    # clip.write_gif(fname, fps=2)
 
 
 def visualize(sess, dcgan, config, option):
@@ -195,7 +195,7 @@ def visualize(sess, dcgan, config, option):
         values = np.arange(0, 1, 1. / config.batch_size)
         for idx in xrange(100):
             print(" [*] %d" % idx)
-            z_sample = np.zeros([config.batch_size, dcgan.z_dim])
+            z_sample = np.random.uniform(-1, 1, size=(config.batch_size, dcgan.z_dim))
             for kdx, z in enumerate(z_sample):
                 z[idx] = values[kdx]
 
@@ -223,7 +223,7 @@ def visualize(sess, dcgan, config, option):
         values = np.arange(0, 1, 1. / config.batch_size)
         for idx in xrange(100):
             print(" [*] %d" % idx)
-            z_sample = np.zeros([config.batch_size, dcgan.z_dim])
+            z_sample = np.random.uniform(-1, 1, size=(config.batch_size, dcgan.z_dim))
             for kdx, z in enumerate(z_sample):
                 z[idx] = values[kdx]
 
