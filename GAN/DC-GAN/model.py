@@ -1,3 +1,4 @@
+# coding=utf-8
 from __future__ import division
 
 import os
@@ -15,16 +16,31 @@ def conv_out_size_same(size, stride):
 
 
 class DCGAN(object):
-    def __init__(self, sess, input_height=108, input_width=108, crop=True,
-                 batch_size=64, sample_num=64, output_height=64, output_width=64,
-                 y_dim=None, z_dim=100, gf_dim=64, df_dim=64,
-                 gfc_dim=1024, dfc_dim=1024, c_dim=3, dataset_name='default',
-                 input_fname_pattern='*.jpg', checkpoint_dir=None, sample_dir=None):
+    def __init__(self,
+                 sess,
+                 input_height=108,
+                 input_width=108,
+                 crop=True,
+                 batch_size=64,
+                 sample_num=64,
+                 output_height=64,
+                 output_width=64,
+                 y_dim=None,
+                 z_dim=100,
+                 gf_dim=64,
+                 df_dim=64,
+                 gfc_dim=1024,
+                 dfc_dim=1024,
+                 c_dim=3,
+                 dataset_name='default',
+                 input_fname_pattern='*.jpg',
+                 checkpoint_dir=None,
+                 sample_dir=None):
         """
 
         Args:
           sess: TensorFlow session
-          batch_size: The size of batch. Should be specified before training.
+          batch_size: 批大小.
           y_dim: (optional) Dimension of dim for y. [None]
           z_dim: (optional) Dimension of dim for Z. [100]
           gf_dim: (optional) Dimension of gen filters in first conv layer. [64]
@@ -67,17 +83,11 @@ class DCGAN(object):
         if not self.y_dim:
             self.g_bn3 = batch_norm(name='g_bn3')
 
-        self.dataset_name = dataset_name
         self.input_fname_pattern = input_fname_pattern
         self.checkpoint_dir = checkpoint_dir
 
-        if self.dataset_name == 'mnist':
-            self.data_X, self.data_y = self.load_mnist()
-            self.c_dim = self.data_X[0].shape[-1]
-        else:
-            self.data = tf.gfile.Glob(os.path.join(FLAGS.local, self.input_fname_pattern))
-            print "read done"
-            self.c_dim = 3
+        self.data = tf.gfile.Glob(os.path.join(FLAGS.local, self.input_fname_pattern))
+        self.c_dim = 3
 
         self.grayscale = (self.c_dim == 1)
 
@@ -513,7 +523,7 @@ class DCGAN(object):
     def load(self, checkpoint_dir):
         import re
         print(" [*] Reading checkpoints...")
-        checkpoint_dir = os.path.join(checkpoint_dir, self.model_dir)
+        checkpoint_dir = os.path.join(checkpoint_dir)
 
         ckpt = tf.train.get_checkpoint_state(checkpoint_dir)
         if ckpt and ckpt.model_checkpoint_path:

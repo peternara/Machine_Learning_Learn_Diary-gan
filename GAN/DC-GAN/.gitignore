@@ -87,3 +87,5 @@ Session.vim
 *~
 
 /data/*
+/samples/
+/checkpoint_dir/

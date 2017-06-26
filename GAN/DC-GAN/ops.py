@@ -15,7 +15,10 @@ else:
 
 
 class batch_norm(object):
-    def __init__(self, epsilon=1e-5, momentum=0.9, name="batch_norm"):
+    def __init__(self,
+                 epsilon=1e-5,
+                 momentum=0.9,
+                 name="batch_norm"):
         with tf.variable_scope(name):
             self.epsilon = epsilon
             self.momentum = momentum

@@ -5,7 +5,7 @@ import numpy as np
 import tensorflow as tf
 
 from model import DCGAN
-from utils import pp, show_all_variables
+from utils import pp, show_all_variables, visualize
 
 flags = tf.app.flags
 flags.DEFINE_integer("epoch", 25, "训练次数")
@@ -18,13 +18,13 @@ flags.DEFINE_integer("input_width", None, "图片输入宽度, 如果空, 和高
 flags.DEFINE_integer("output_height", 256, "输出图片大小")
 flags.DEFINE_integer("output_width", None, "图片输出宽度, 如果空, 和高度一致")
 flags.DEFINE_string("input_fname_pattern", "*.jpg", "图片名")
-flags.DEFINE_string("checkpointDir", "logs/", "模型保存路径")
+flags.DEFINE_string("checkpointDir", "checkpoint_dir/", "模型保存路径")
 flags.DEFINE_string("summaryDir", "logs/", "TensorBoard路径")
 flags.DEFINE_string("local", "data/sample_dir/", "图片储存路径")
 flags.DEFINE_string("dataset", "sample_dir", "数据集名称")
-flags.DEFINE_boolean("train", True, "是否是训练")
+flags.DEFINE_boolean("train", False, "是否是训练")
 flags.DEFINE_boolean("crop", False, "是否裁剪, 如果训练的时候, 建议为True, 如果是测试的时候, 建议为False")
-flags.DEFINE_boolean("visualize", False, "是否进行可视化")
+flags.DEFINE_boolean("visualize", True, "是否进行可视化")
 FLAGS = flags.FLAGS
 
 
@@ -68,6 +68,8 @@ def main(_):
         else:
             if not dcgan.load(FLAGS.checkpointDir)[0]:
                 raise Exception("[!] Train a model first, then run test mode")
+            option = 4
+            visualize(sess, dcgan, FLAGS, option)
 
 
 if __name__ == '__main__':

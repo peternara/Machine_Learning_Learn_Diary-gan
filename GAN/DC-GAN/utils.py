@@ -1,3 +1,4 @@
+# coding:utf8
 """
 Some codes from https://github.com/Newmu/dcgan_code
 """
@@ -8,6 +9,7 @@ import pprint
 import random
 from time import gmtime, strftime
 
+import moviepy.editor as mpy
 import numpy as np
 import scipy.misc
 import tensorflow as tf
@@ -178,13 +180,14 @@ def make_gif(images, fname, duration=2, true_image=False):
             return ((x + 1) / 2 * 255).astype(np.uint8)
 
     clip = mpy.VideoClip(make_frame, duration=duration)
-    clip.write_gif(fname, fps=len(images) / duration)
+    # clip.write_gif(fname, fps=len(images) / duration)
+    clip.write_gif(fname, fps=25)
 
 
 def visualize(sess, dcgan, config, option):
     image_frame_dim = int(math.ceil(config.batch_size ** .5))
     if option == 0:
-        z_sample = np.random.uniform(-0.5, 0.5, size=(config.batch_size, dcgan.z_dim))
+        z_sample = np.random.uniform(-1, 1, size=(config.batch_size, dcgan.z_dim))
         samples = sess.run(dcgan.sampler, feed_dict={dcgan.z: z_sample})
         save_images(samples, [image_frame_dim, image_frame_dim],
                     './samples/test_%s.png' % strftime("%Y%m%d%H%M%S", gmtime()))
@@ -196,14 +199,7 @@ def visualize(sess, dcgan, config, option):
             for kdx, z in enumerate(z_sample):
                 z[idx] = values[kdx]
 
-            if config.dataset == "mnist":
-                y = np.random.choice(10, config.batch_size)
-                y_one_hot = np.zeros((config.batch_size, 10))
-                y_one_hot[np.arange(config.batch_size), y] = 1
-
-                samples = sess.run(dcgan.sampler, feed_dict={dcgan.z: z_sample, dcgan.y: y_one_hot})
-            else:
-                samples = sess.run(dcgan.sampler, feed_dict={dcgan.z: z_sample})
+            samples = sess.run(dcgan.sampler, feed_dict={dcgan.z: z_sample})
 
             save_images(samples, [image_frame_dim, image_frame_dim], './samples/test_arange_%s.png' % (idx))
     elif option == 2:
@@ -216,14 +212,7 @@ def visualize(sess, dcgan, config, option):
             for kdx, z in enumerate(z_sample):
                 z[idx] = values[kdx]
 
-            if config.dataset == "mnist":
-                y = np.random.choice(10, config.batch_size)
-                y_one_hot = np.zeros((config.batch_size, 10))
-                y_one_hot[np.arange(config.batch_size), y] = 1
-
-                samples = sess.run(dcgan.sampler, feed_dict={dcgan.z: z_sample, dcgan.y: y_one_hot})
-            else:
-                samples = sess.run(dcgan.sampler, feed_dict={dcgan.z: z_sample})
+            samples = sess.run(dcgan.sampler, feed_dict={dcgan.z: z_sample})
 
             try:
                 make_gif(samples, './samples/test_gif_%s.gif' % (idx))
@@ -246,7 +235,8 @@ def visualize(sess, dcgan, config, option):
 
         for idx in xrange(100):
             print(" [*] %d" % idx)
-            z_sample = np.zeros([config.batch_size, dcgan.z_dim])
+            # z_sample = np.zeros([config.batch_size, dcgan.z_dim])
+            z_sample = np.random.uniform(-1, 1, size=(config.batch_size, dcgan.z_dim))
             for kdx, z in enumerate(z_sample): z[idx] = values[kdx]
 
             image_set.append(sess.run(dcgan.sampler, feed_dict={dcgan.z: z_sample}))
