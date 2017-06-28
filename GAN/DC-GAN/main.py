@@ -8,9 +8,9 @@ from model import DCGAN
 from utils import pp, show_all_variables, visualize
 
 flags = tf.app.flags
-flags.DEFINE_integer("epoch", 25, "训练次数")
-flags.DEFINE_float("learning_rate", 0.0002, "学习速率")
-flags.DEFINE_float("beta1", 0.5, "Adam 动量")
+flags.DEFINE_integer("epoch", 100, "训练次数")
+flags.DEFINE_float("learning_rate", 0.001, "学习速率")
+flags.DEFINE_float("beta1", 0.6, "Adam 动量")
 flags.DEFINE_integer("train_size", np.inf, "每次训练的次数")
 flags.DEFINE_integer("batch_size", 64, "图片批数")
 flags.DEFINE_integer("input_height", 256, "图片输入大小")
@@ -64,7 +64,7 @@ def main(_):
         else:
             if not dcgan.load(FLAGS.checkpointDir)[0]:
                 raise Exception("[!] Train a model first, then run test mode")
-            option = 1
+            option = 0
             visualize(sess, dcgan, FLAGS, option)
 
 

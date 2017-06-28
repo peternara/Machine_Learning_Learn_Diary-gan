@@ -73,6 +73,8 @@ class DCGAN(object):
         self.d_bn1 = batch_norm(name='d_bn1')
         self.d_bn2 = batch_norm(name='d_bn2')
 
+        self.dataset_name = dataset_name
+
         if not self.y_dim:
             self.d_bn3 = batch_norm(name='d_bn3')
 
@@ -463,7 +465,6 @@ class DCGAN(object):
 
                 return tf.nn.sigmoid(deconv2d(h2, [self.batch_size, s_h, s_w, self.c_dim], name='g_h3'))
 
-
     @property
     def model_dir(self):
         return "{}_{}_{}_{}".format(
@@ -473,7 +474,6 @@ class DCGAN(object):
     def save(self, checkpoint_dir, step):
         model_name = "DCGAN.model"
         checkpoint_dir = os.path.join(checkpoint_dir, self.model_dir)
-
         if not os.path.exists(checkpoint_dir):
             os.makedirs(checkpoint_dir)
 
@@ -484,8 +484,7 @@ class DCGAN(object):
     def load(self, checkpoint_dir):
         import re
         print(" [*] Reading checkpoints...")
-        checkpoint_dir = os.path.join(checkpoint_dir)
-
+        checkpoint_dir = os.path.join(checkpoint_dir, self.model_dir)
         ckpt = tf.train.get_checkpoint_state(checkpoint_dir)
         if ckpt and ckpt.model_checkpoint_path:
             ckpt_name = os.path.basename(ckpt.model_checkpoint_path)
