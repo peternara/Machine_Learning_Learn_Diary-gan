@@ -9,18 +9,18 @@ from utils import pp, show_all_variables, visualize
 
 flags = tf.app.flags
 flags.DEFINE_integer("epoch", 100, "训练次数")
-flags.DEFINE_float("learning_rate", 0.001, "学习速率")
-flags.DEFINE_float("beta1", 0.6, "Adam 动量")
+flags.DEFINE_float("learning_rate", 0.0002, "学习速率")
+flags.DEFINE_float("beta1", 0.5, "Adam 动量")
 flags.DEFINE_integer("train_size", np.inf, "每次训练的次数")
 flags.DEFINE_integer("batch_size", 64, "图片批数")
-flags.DEFINE_integer("input_height", 256, "图片输入大小")
+flags.DEFINE_integer("input_height", 128, "图片输入大小")
 flags.DEFINE_integer("input_width", None, "图片输入宽度, 如果空, 和高度一致")
-flags.DEFINE_integer("output_height", 256, "输出图片大小")
+flags.DEFINE_integer("output_height", 128, "输出图片大小")
 flags.DEFINE_integer("output_width", None, "图片输出宽度, 如果空, 和高度一致")
 flags.DEFINE_string("input_fname_pattern", "*.jpg", "图片名")
 flags.DEFINE_string("checkpointDir", "checkpoint_dir/", "模型保存路径")
 flags.DEFINE_string("summaryDir", "logs/", "TensorBoard路径")
-flags.DEFINE_string("local", "data/sample_dir/", "图片储存路径")
+flags.DEFINE_string("buckets", "data/sample_dir/", "图片储存路径")
 flags.DEFINE_string("dataset", "sample_dir", "数据集名称")
 flags.DEFINE_boolean("train", True, "是否是训练")
 flags.DEFINE_boolean("crop", False, "是否裁剪, 如果训练的时候, 建议为True, 如果是测试的时候, 建议为False")
@@ -38,8 +38,8 @@ def main(_):
 
     if not os.path.exists(FLAGS.checkpointDir):
         os.makedirs(FLAGS.checkpointDir)
-    if not os.path.exists(FLAGS.local):
-        os.makedirs(FLAGS.local)
+    if not os.path.exists(FLAGS.buckets):
+        os.makedirs(FLAGS.buckets)
 
     with tf.Session() as sess:
 
@@ -55,7 +55,7 @@ def main(_):
             input_fname_pattern=FLAGS.input_fname_pattern,
             crop=FLAGS.crop,
             checkpoint_dir=FLAGS.checkpointDir,
-            sample_dir=FLAGS.local)
+            sample_dir=FLAGS.buckets)
 
         show_all_variables()
 

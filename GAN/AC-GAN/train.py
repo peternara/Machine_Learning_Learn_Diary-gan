@@ -10,10 +10,12 @@ import ac_gan
 import utils
 
 FLAGS = tf.app.flags.FLAGS
-tf.app.flags.DEFINE_string('log_dir', './mnist_log_dir', 'tensorboard 文件夹')
-tf.app.flags.DEFINE_string('sample_dir', './samples', '训练结果储存文件夹')
+tf.app.flags.DEFINE_string("summaryDir", "logs/", "TensorBoard路径")
+tf.app.flags.DEFINE_string('buckets', './mnist_log_dir', 'tensorboard 文件夹')
+tf.app.flags.DEFINE_string("checkpointDir", "checkpoint_dir/", "模型保存路径")
 tf.app.flags.DEFINE_integer('train_steps', 1000, '训练次数')
 tf.app.flags.DEFINE_float('train_rate', 1e-3, '训练速率')
+tf.app.flags.DEFINE_integer('num_classes', 133, '类型数')
 
 
 def train():
@@ -47,11 +49,15 @@ def train():
     with sess.as_default():
         init = tf.global_variables_initializer()
         sess.run(init)
+
+
+
         tf.train.start_queue_runners(sess=sess)
 
         saver = tf.train.Saver()
 
         training_steps = FLAGS.train_steps
+
 
         for step in range(training_steps):
 

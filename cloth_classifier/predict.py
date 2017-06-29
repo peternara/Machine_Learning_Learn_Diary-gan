@@ -30,8 +30,7 @@ def main(arg=None):
         try:
             persentage, path = sess.run([logits, filepath])
             if persentage[0]:
-                shutil.copyfile(path, './classify/T{}.jpg'.format(key))
-
+                shutil.copyfile(path, './img_save/T{}_new.jpg'.format(key))
             print key
         except Exception,e:
             print e.message

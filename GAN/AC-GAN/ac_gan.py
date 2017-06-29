@@ -2,24 +2,20 @@
 import os
 
 import tensorflow as tf
-import numpy as np
 
 import ops
 
-from tfrecords_reader import TFRecordsReader
-
 tf.app.flags.DEFINE_integer('input_height', 64, '输入图片高度')
 tf.app.flags.DEFINE_integer('input_width', 64, '输入图片宽度')
-tf.app.flags.DEFINE_integer('input_channels', 1, '图片通道')
+tf.app.flags.DEFINE_integer('input_channels', 3, '图片通道')
 tf.app.flags.DEFINE_integer('output_height', 64, '输出图片高度')
 tf.app.flags.DEFINE_integer('output_width', 64, '输出图片宽度')
 tf.app.flags.DEFINE_integer('z_dim', 100, '噪音数目')
-tf.app.flags.DEFINE_integer('n_classes', 10, '分类数目')
+tf.app.flags.DEFINE_integer('num_classes', 10, '分类数目')
 tf.app.flags.DEFINE_boolean('crop', True, '是否裁剪数据')
 tf.app.flags.DEFINE_integer('batch_size', 64, '批大小')
 tf.app.flags.DEFINE_float('learning_rate', 2e-4, '学习速率')
 tf.app.flags.DEFINE_float('beta1', 0.5, 'Adam动量')
-
 FLAGS = tf.app.flags.FLAGS
 
 
@@ -209,28 +205,34 @@ def generator(z, labels):
     return h4
 
 
-def inputs():
-    crop = FLAGS.crop  # 是否裁剪图片
-    crop_height, crop_width = FLAGS.input_height, FLAGS.input_width  # 输入的宽高
-    resize_height, resize_width = FLAGS.output_height, FLAGS.output_width  # 输出的宽高
+class Reader:
+    def __init__(self, path, pattem, batch_size):
+        files = tf.gfile.Glob(os.path.join(path, pattem))
+        self.batch_size = batch_size
+        self.fileQueue = tf.train.string_input_producer(files)
+        self.reader = tf.WholeFileReader()
 
-    reader = TFRecordsReader(
-        image_height=28,
-        image_width=28,
-        image_channels=1,
-        image_format="bmp",
-        directory="data/mnist",
-        filename_pattern="*.tfrecords",
-        crop=False,
-        crop_height=crop_height,
-        crop_width=crop_width,
-        resize=True,
-        resize_height=resize_height,
-        resize_width=resize_height,
-        num_examples_per_epoch=64)
+    def read(self):
+        labels = []
+        images = []
+        for key in xrange(self.batch_size):
+            file_name, file = self.reader.read(self.fileQueue)
+            image = tf.image.decode_jpeg(file, 3)
+            image = tf.image.resize_image_with_crop_or_pad(image, FLAGS.output_height, FLAGS.output_weight)
+            image = tf.image.per_image_standardization(image)
 
-    images, labels = reader.inputs(batch_size=FLAGS.batch_size)
-    float_images = tf.cast(images, tf.float32)
-    float_images = tf.map_fn(tf.image.per_image_standardization,float_images)
+            label = tf.string_split([file_name], '_').values[0]
+            label = tf.decode_raw(label, tf.uint8)
+            label = tf.one_hot(label, FLAGS.num_classes)
 
-    return float_images, labels
+            labels.append(label)
+            images.append(image)
+        return labels, images
+
+
+if __name__ == '__main__':
+    reader = Reader('test', '*.jpg', 10)
+    sess = tf.InteractiveSession()
+    tf.train.start_queue_runners(sess=sess)
+    label, image = reader.read()
+    print sess.run(label)

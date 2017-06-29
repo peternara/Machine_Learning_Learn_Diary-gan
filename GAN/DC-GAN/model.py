@@ -88,7 +88,7 @@ class DCGAN(object):
         self.input_fname_pattern = input_fname_pattern
         self.checkpoint_dir = checkpoint_dir
 
-        self.data = tf.gfile.Glob(os.path.join(FLAGS.local, self.input_fname_pattern))
+        self.data = tf.gfile.Glob(os.path.join(FLAGS.buckets, self.input_fname_pattern))
         self.c_dim = 3
 
         self.grayscale = (self.c_dim == 1)
@@ -162,10 +162,8 @@ class DCGAN(object):
             .minimize(self.d_loss, var_list=self.d_vars)
         g_optim = tf.train.AdamOptimizer(config.learning_rate, beta1=config.beta1) \
             .minimize(self.g_loss, var_list=self.g_vars)
-        try:
-            tf.global_variables_initializer().run()
-        except:
-            tf.initialize_all_variables().run()
+
+        tf.global_variables_initializer().run()
 
         self.g_sum = merge_summary([self.z_sum, self.d__sum,
                                     self.G_sum, self.d_loss_fake_sum, self.g_loss_sum])
@@ -175,23 +173,6 @@ class DCGAN(object):
 
         sample_z = np.random.uniform(-1, 1, size=(self.sample_num, self.z_dim))
 
-        if config.dataset == 'mnist':
-            sample_inputs = self.data_X[0:self.sample_num]
-            sample_labels = self.data_y[0:self.sample_num]
-        else:
-            sample_files = self.data[0:self.sample_num]
-            sample = [
-                get_image(sample_file,
-                          input_height=self.input_height,
-                          input_width=self.input_width,
-                          resize_height=self.output_height,
-                          resize_width=self.output_width,
-                          crop=self.crop,
-                          grayscale=self.grayscale) for sample_file in sample_files]
-            if (self.grayscale):
-                sample_inputs = np.array(sample).astype(np.float32)[:, :, :, None]
-            else:
-                sample_inputs = np.array(sample).astype(np.float32)
 
         counter = 1
         start_time = time.time()
@@ -203,31 +184,27 @@ class DCGAN(object):
             print(" [!] Load failed...")
 
         for epoch in xrange(config.epoch):
-            if config.dataset == 'mnist':
-                batch_idxs = min(len(self.data_X), config.train_size) // config.batch_size
-            else:
-                self.data = glob(os.path.join(
-                    "./data", config.dataset, self.input_fname_pattern))
-                batch_idxs = min(len(self.data), config.train_size) // config.batch_size
+
+            self.data = glob(os.path.join(
+                FLAGS.buckets, self.input_fname_pattern))
+            batch_idxs = min(len(self.data), config.train_size) // config.batch_size
 
             for idx in xrange(0, batch_idxs):
-                if config.dataset == 'mnist':
-                    batch_images = self.data_X[idx * config.batch_size:(idx + 1) * config.batch_size]
-                    batch_labels = self.data_y[idx * config.batch_size:(idx + 1) * config.batch_size]
+
+                batch_files = self.data[idx * config.batch_size:(idx + 1) * config.batch_size]
+
+                batch = [
+                    get_image(batch_file,
+                              input_height=self.input_height,
+                              input_width=self.input_width,
+                              resize_height=self.output_height,
+                              resize_width=self.output_width,
+                              crop=self.crop,
+                              grayscale=self.grayscale) for batch_file in batch_files]
+                if self.grayscale:
+                    batch_images = np.array(batch).astype(np.float32)[:, :, :, None]
                 else:
-                    batch_files = self.data[idx * config.batch_size:(idx + 1) * config.batch_size]
-                    batch = [
-                        get_image(batch_file,
-                                  input_height=self.input_height,
-                                  input_width=self.input_width,
-                                  resize_height=self.output_height,
-                                  resize_width=self.output_width,
-                                  crop=self.crop,
-                                  grayscale=self.grayscale) for batch_file in batch_files]
-                    if self.grayscale:
-                        batch_images = np.array(batch).astype(np.float32)[:, :, :, None]
-                    else:
-                        batch_images = np.array(batch).astype(np.float32)
+                    batch_images = np.array(batch).astype(np.float32)
 
                 batch_z = np.random.uniform(-1, 1, [config.batch_size, self.z_dim]) \
                     .astype(np.float32)
