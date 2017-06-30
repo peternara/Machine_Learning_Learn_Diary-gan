@@ -10,10 +10,10 @@ import ac_gan
 import utils
 
 FLAGS = tf.app.flags.FLAGS
-tf.app.flags.DEFINE_string("summaryDir", "logs/", "TensorBoard路径")
-tf.app.flags.DEFINE_string('buckets', './mnist_log_dir', 'tensorboard 文件夹')
+tf.app.flags.DEFINE_string("summaryDir", "summary/", "TensorBoard路径")
+tf.app.flags.DEFINE_string('buckets', 'saves/', '图片文件夹')
 tf.app.flags.DEFINE_string("checkpointDir", "checkpoint_dir/", "模型保存路径")
-tf.app.flags.DEFINE_integer('train_steps', 1000, '训练次数')
+tf.app.flags.DEFINE_integer('train_steps', 10000, '训练次数')
 tf.app.flags.DEFINE_float('train_rate', 1e-3, '训练速率')
 tf.app.flags.DEFINE_integer('num_classes', 133, '类型数')
 
@@ -23,7 +23,9 @@ def train():
     z = tf.placeholder(tf.float32, [FLAGS.batch_size, FLAGS.z_dim], name='z')
 
     # get images and labels
-    images, labels = ac_gan.inputs()
+    reader = ac_gan.Reader(path=FLAGS.buckets, pattem='*.jpg', batch_size=FLAGS.batch_size,
+                           num_classes=FLAGS.num_classes)
+    labels, images = reader.read()
 
     # logits
     [
@@ -35,31 +37,38 @@ def train():
     ] = ac_gan.inference(images, labels, z)
 
     # loss
-    d_loss, g_loss = ac_gan.loss(labels,
-                                 source_logits_real,
-                                 class_logits_real,
-                                 source_logits_fake,
-                                 class_logits_fake,
-                                 generated_images)
+    d_loss, g_loss, dc_loss = ac_gan.loss(labels,
+                                          source_logits_real,
+                                          class_logits_real,
+                                          source_logits_fake,
+                                          class_logits_fake,
+                                          generated_images)
 
     # train the model
     train_d_op, train_g_op = ac_gan.train(d_loss, g_loss)
 
+    # summary
+    summary_image = tf.summary.image('generate_image', generated_images)
+    summary_gloss = tf.summary.scalar('g_loss', g_loss)
+    summary_dloss = tf.summary.scalar('d_loss', d_loss)
+    summary_dcloss = tf.summary.scalar('dc_loss', dc_loss)
+
     sess = tf.Session()
+
     with sess.as_default():
         init = tf.global_variables_initializer()
+
         sess.run(init)
-
-
 
         tf.train.start_queue_runners(sess=sess)
 
         saver = tf.train.Saver()
+        ac_gan.load(sess, saver, checkpointDir=FLAGS.checkpointDir)
 
+        summary_writer = tf.summary.FileWriter(FLAGS.summaryDir)
         training_steps = FLAGS.train_steps
 
-
-        for step in range(training_steps):
+        for step in xrange(training_steps):
 
             random_z = np.random.uniform(
                 -1, 1, size=(FLAGS.batch_size, FLAGS.z_dim)).astype(np.float32)
@@ -67,32 +76,26 @@ def train():
             sess.run(train_d_op, feed_dict={z: random_z})
             sess.run(train_g_op, feed_dict={z: random_z})
             sess.run(train_g_op, feed_dict={z: random_z})
-
-            discrimnator_loss, generator_loss = sess.run(
-                [d_loss, g_loss], feed_dict={z: random_z})
-
-            time_str = datetime.datetime.now().isoformat()
-            print("{}: step {}, d_loss {:g}, g_loss {:g}".format(
-                time_str, step, discrimnator_loss, generator_loss))
-
+            print "step: {}".format(step)
             if step % 10 == 0:
-                test_images = sess.run(
-                    generated_images, feed_dict={z: random_z})
-
-                image_path = os.path.join(FLAGS.buckets_local,
-                                          "sampled_images_%d.jpg" % step)
-
-                utils.grid_plot(test_images, [8, 8], image_path)
-
+                merge_op = tf.summary.merge([summary_image, summary_gloss, summary_dloss, summary_dcloss])
+            else:
+                merge_op = tf.summary.merge([summary_gloss, summary_dloss, summary_dcloss])
+            merge_data = sess.run(merge_op, feed_dict={z: random_z})
+            summary_writer.add_summary(merge_data, step)
             if step % 100 == 0:
-                saver.save(sess, os.path.join(FLAGS.log_dir, "model.ckp"))
+                saver.save(sess, os.path.join(FLAGS.checkpointDir, "model.ckp"))
 
 
 def main(argv=None):
-    if tf.gfile.Exists(FLAGS.log_dir):
-        tf.gfile.DeleteRecursively(FLAGS.log_dir)
-
-    tf.gfile.MakeDirs(FLAGS.log_dir)
+    # check folder exist
+    if tf.gfile.Exists(FLAGS.summaryDir):
+        tf.gfile.DeleteRecursively(FLAGS.summaryDir)
+        tf.gfile.MkDir(FLAGS.summaryDir)
+    else:
+        tf.gfile.MkDir(FLAGS.summaryDir)
+    if not tf.gfile.Exists(FLAGS.checkpointDir):
+        tf.gfile.MkDir(FLAGS.checkpointDir)
 
     train()
 

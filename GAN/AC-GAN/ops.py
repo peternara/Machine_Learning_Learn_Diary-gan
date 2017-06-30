@@ -5,7 +5,7 @@ def conv_2d(x, num_filters, kernel_size=5, stride=2, scope='conv'):
 
     with tf.variable_scope(scope):
         w = tf.get_variable(
-            'w', [kernel_size, kernel_size, x.get_shape()[-1], num_filters],
+            'w', [kernel_size, kernel_size, x[0].get_shape()[-1], num_filters],
             initializer=tf.truncated_normal_initializer(stddev=0.02))
 
         conv = tf.nn.conv2d(

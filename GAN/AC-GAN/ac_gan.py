@@ -11,7 +11,6 @@ tf.app.flags.DEFINE_integer('input_channels', 3, '图片通道')
 tf.app.flags.DEFINE_integer('output_height', 64, '输出图片高度')
 tf.app.flags.DEFINE_integer('output_width', 64, '输出图片宽度')
 tf.app.flags.DEFINE_integer('z_dim', 100, '噪音数目')
-tf.app.flags.DEFINE_integer('num_classes', 10, '分类数目')
 tf.app.flags.DEFINE_boolean('crop', True, '是否裁剪数据')
 tf.app.flags.DEFINE_integer('batch_size', 64, '批大小')
 tf.app.flags.DEFINE_float('learning_rate', 2e-4, '学习速率')
@@ -36,8 +35,6 @@ def loss(labels,
          source_logits_fake,
          class_logits_fake,
          generated_images):
-    labels_one_hot = tf.one_hot(labels, FLAGS.n_classes)
-
     #   判断图片真假损失
     source_loss_real = tf.reduce_mean(
         tf.nn.sigmoid_cross_entropy_with_logits(
@@ -58,17 +55,18 @@ def loss(labels,
     class_loss_real = tf.reduce_mean(
         tf.nn.softmax_cross_entropy_with_logits(
             logits=class_logits_real,
-            labels=labels_one_hot))
+            labels=labels))
     class_loss_fake = tf.reduce_mean(
         tf.nn.softmax_cross_entropy_with_logits(
             logits=class_logits_fake,
-            labels=labels_one_hot))
+            labels=labels))
 
     d_loss = source_loss_real + source_loss_fake + class_loss_real + class_loss_fake
 
     g_loss = g_loss + class_loss_real + class_loss_fake
 
-    return d_loss, g_loss
+    dc_loss = class_loss_real + class_loss_fake
+    return d_loss, g_loss, dc_loss
 
 
 def train(d_loss, g_loss):
@@ -137,18 +135,15 @@ def discriminator(images, labels, reuse=False):
 
         # class logits
         class_logits = ops.fc(
-            h4_reshape, FLAGS.n_classes, scope="class_logits")
+            h4_reshape, FLAGS.num_classes, scope="class_logits")
 
         return source_logits, class_logits
 
 
 def generator(z, labels):
     with tf.variable_scope("generator") as scope:
-        # labels to one_hot
-        labels_one_hot = tf.one_hot(labels, FLAGS.n_classes)
-
         # concat z and labels
-        z_labels = tf.concat([z, labels_one_hot], 1)
+        z_labels = tf.concat([z, labels], 1)
         # project z and reshape
         oh, ow = FLAGS.output_height, FLAGS.output_width
 
@@ -205,12 +200,21 @@ def generator(z, labels):
     return h4
 
 
+def load(sess, saver, checkpointDir):
+    if tf.train.get_checkpoint_state(checkpointDir):
+        saver.restore(sess, os.path.join(checkpointDir))
+        print "checkpoint get"
+    else:
+        print "checkpoint not found"
+
+
 class Reader:
-    def __init__(self, path, pattem, batch_size):
+    def __init__(self, path, pattem, batch_size, num_classes):
         files = tf.gfile.Glob(os.path.join(path, pattem))
         self.batch_size = batch_size
         self.fileQueue = tf.train.string_input_producer(files)
         self.reader = tf.WholeFileReader()
+        self.num_classes = num_classes
 
     def read(self):
         labels = []
@@ -218,12 +222,13 @@ class Reader:
         for key in xrange(self.batch_size):
             file_name, file = self.reader.read(self.fileQueue)
             image = tf.image.decode_jpeg(file, 3)
-            image = tf.image.resize_image_with_crop_or_pad(image, FLAGS.output_height, FLAGS.output_weight)
+            image = tf.image.resize_image_with_crop_or_pad(image, FLAGS.output_height, FLAGS.output_width)
             image = tf.image.per_image_standardization(image)
 
-            label = tf.string_split([file_name], '_').values[0]
-            label = tf.decode_raw(label, tf.uint8)
-            label = tf.one_hot(label, FLAGS.num_classes)
+            label = tf.string_split([file_name], '/').values[1]
+            label = tf.string_split([label], '-').values[0]
+            label = tf.string_to_number(label, tf.int32)
+            label = tf.one_hot(label, self.num_classes)
 
             labels.append(label)
             images.append(image)
@@ -231,7 +236,7 @@ class Reader:
 
 
 if __name__ == '__main__':
-    reader = Reader('test', '*.jpg', 10)
+    reader = Reader('test', '*.jpg', 64, 113)
     sess = tf.InteractiveSession()
     tf.train.start_queue_runners(sess=sess)
     label, image = reader.read()
