@@ -202,7 +202,8 @@ def generator(z, labels):
 
 def load(sess, saver, checkpointDir):
     if tf.train.get_checkpoint_state(checkpointDir):
-        saver.restore(sess, os.path.join(checkpointDir))
+        latest_checkpoint = os.path.basename(tf.train.latest_checkpoint(FLAGS.checkpointDir))
+        saver.restore(sess, os.path.join(checkpointDir, latest_checkpoint))
         print "checkpoint get"
     else:
         print "checkpoint not found"
@@ -219,24 +220,25 @@ class Reader:
     def read(self):
         labels = []
         images = []
+        file_name, file = self.reader.read(self.fileQueue)
         for key in xrange(self.batch_size):
-            file_name, file = self.reader.read(self.fileQueue)
-            image = tf.image.decode_jpeg(file, 3)
+            image = tf.image.decode_image(file, 3)
             image = tf.image.resize_image_with_crop_or_pad(image, FLAGS.output_height, FLAGS.output_width)
             image = tf.image.per_image_standardization(image)
 
-            label = tf.string_split([file_name], '/').values[1]
+            label = tf.string_split([file_name], '/').values[-1]
             label = tf.string_split([label], '-').values[0]
             label = tf.string_to_number(label, tf.int32)
             label = tf.one_hot(label, self.num_classes)
 
             labels.append(label)
             images.append(image)
+
         return labels, images
 
 
 if __name__ == '__main__':
-    reader = Reader('test', '*.jpg', 64, 113)
+    reader = Reader('saves', '*.jpg', 120, 113)
     sess = tf.InteractiveSession()
     tf.train.start_queue_runners(sess=sess)
     label, image = reader.read()

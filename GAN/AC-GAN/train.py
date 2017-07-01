@@ -1,18 +1,14 @@
 # coding=utf-8
-import datetime
 import os
 
 import numpy as np
 import tensorflow as tf
-
 import ac_gan
 
-import utils
-
 FLAGS = tf.app.flags.FLAGS
-tf.app.flags.DEFINE_string("summaryDir", "summary/", "TensorBoard路径")
-tf.app.flags.DEFINE_string('buckets', 'saves/', '图片文件夹')
-tf.app.flags.DEFINE_string("checkpointDir", "checkpoint_dir/", "模型保存路径")
+tf.app.flags.DEFINE_string("summaryDir", "./summary/", "TensorBoard路径")
+tf.app.flags.DEFINE_string('buckets', './saves/', '图片文件夹')
+tf.app.flags.DEFINE_string("checkpointDir", "./checkpoint_dir/", "模型保存路径")
 tf.app.flags.DEFINE_integer('train_steps', 10000, '训练次数')
 tf.app.flags.DEFINE_float('train_rate', 1e-3, '训练速率')
 tf.app.flags.DEFINE_integer('num_classes', 133, '类型数')
@@ -21,6 +17,7 @@ tf.app.flags.DEFINE_integer('num_classes', 133, '类型数')
 def train():
     # placeholder for z
     z = tf.placeholder(tf.float32, [FLAGS.batch_size, FLAGS.z_dim], name='z')
+    sess = tf.Session()
 
     # get images and labels
     reader = ac_gan.Reader(path=FLAGS.buckets, pattem='*.jpg', batch_size=FLAGS.batch_size,
@@ -53,8 +50,6 @@ def train():
     summary_dloss = tf.summary.scalar('d_loss', d_loss)
     summary_dcloss = tf.summary.scalar('dc_loss', dc_loss)
 
-    sess = tf.Session()
-
     with sess.as_default():
         init = tf.global_variables_initializer()
 
@@ -63,9 +58,10 @@ def train():
         tf.train.start_queue_runners(sess=sess)
 
         saver = tf.train.Saver()
+
         ac_gan.load(sess, saver, checkpointDir=FLAGS.checkpointDir)
 
-        summary_writer = tf.summary.FileWriter(FLAGS.summaryDir)
+        summary_writer = tf.summary.FileWriter(FLAGS.summaryDir, graph=sess.graph)
         training_steps = FLAGS.train_steps
 
         for step in xrange(training_steps):
@@ -84,7 +80,7 @@ def train():
             merge_data = sess.run(merge_op, feed_dict={z: random_z})
             summary_writer.add_summary(merge_data, step)
             if step % 100 == 0:
-                saver.save(sess, os.path.join(FLAGS.checkpointDir, "model.ckp"))
+                saver.save(sess, os.path.join(FLAGS.checkpointDir, 'baiduJS.model'))
 
 
 def main(argv=None):

@@ -2,7 +2,7 @@ import tensorflow as tf
 
 
 def conv_2d(x, num_filters, kernel_size=5, stride=2, scope='conv'):
-
+    print x
     with tf.variable_scope(scope):
         w = tf.get_variable(
             'w', [kernel_size, kernel_size, x[0].get_shape()[-1], num_filters],
