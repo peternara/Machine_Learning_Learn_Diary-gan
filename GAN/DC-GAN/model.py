@@ -192,7 +192,7 @@ class DCGAN(object):
             for idx in xrange(0, batch_idxs):
 
                 batch_files = self.data[idx * config.batch_size:(idx + 1) * config.batch_size]
-
+                print batch_files
                 batch = [
                     get_image(batch_file,
                               input_height=self.input_height,

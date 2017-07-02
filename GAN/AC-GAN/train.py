@@ -7,10 +7,11 @@ import ac_gan
 
 FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_string("summaryDir", "./summary/", "TensorBoard路径")
-tf.app.flags.DEFINE_string('buckets', './saves/', '图片文件夹')
+tf.app.flags.DEFINE_string('buckets', './Records/', '图片文件夹')
 tf.app.flags.DEFINE_string("checkpointDir", "./checkpoint_dir/", "模型保存路径")
 tf.app.flags.DEFINE_integer('train_steps', 10000, '训练次数')
-tf.app.flags.DEFINE_float('train_rate', 1e-3, '训练速率')
+tf.app.flags.DEFINE_float('learning_rate', 2e-4, '学习速率')
+tf.app.flags.DEFINE_float('beta1', 0.5, 'Adam动量')
 tf.app.flags.DEFINE_integer('num_classes', 133, '类型数')
 
 
@@ -20,7 +21,7 @@ def train():
     sess = tf.Session()
 
     # get images and labels
-    reader = ac_gan.Reader(path=FLAGS.buckets, pattem='*.jpg', batch_size=FLAGS.batch_size,
+    reader = ac_gan.Reader(path=FLAGS.buckets, pattem='*.tfrecords', batch_size=FLAGS.batch_size,
                            num_classes=FLAGS.num_classes)
     labels, images = reader.read()
 
@@ -80,7 +81,8 @@ def train():
             merge_data = sess.run(merge_op, feed_dict={z: random_z})
             summary_writer.add_summary(merge_data, step)
             if step % 100 == 0:
-                saver.save(sess, os.path.join(FLAGS.checkpointDir, 'baiduJS.model'))
+                saver.save(sess, os.path.join(FLAGS.checkpointDir, 'baiduJS.model'), global_step=step)
+        summary_writer.close()
 
 
 def main(argv=None):

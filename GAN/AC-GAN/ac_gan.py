@@ -13,8 +13,6 @@ tf.app.flags.DEFINE_integer('output_width', 64, '输出图片宽度')
 tf.app.flags.DEFINE_integer('z_dim', 100, '噪音数目')
 tf.app.flags.DEFINE_boolean('crop', True, '是否裁剪数据')
 tf.app.flags.DEFINE_integer('batch_size', 64, '批大小')
-tf.app.flags.DEFINE_float('learning_rate', 2e-4, '学习速率')
-tf.app.flags.DEFINE_float('beta1', 0.5, 'Adam动量')
 FLAGS = tf.app.flags.FLAGS
 
 
@@ -213,33 +211,34 @@ class Reader:
     def __init__(self, path, pattem, batch_size, num_classes):
         files = tf.gfile.Glob(os.path.join(path, pattem))
         self.batch_size = batch_size
-        self.fileQueue = tf.train.string_input_producer(files)
-        self.reader = tf.WholeFileReader()
+        self.fileQueue = tf.train.string_input_producer(files, shuffle=True)
+        self.reader = tf.TFRecordReader()
         self.num_classes = num_classes
 
     def read(self):
         labels = []
         images = []
-        file_name, file = self.reader.read(self.fileQueue)
-        for key in xrange(self.batch_size):
-            image = tf.image.decode_image(file, 3)
-            image = tf.image.resize_image_with_crop_or_pad(image, FLAGS.output_height, FLAGS.output_width)
-            image = tf.image.per_image_standardization(image)
-
-            label = tf.string_split([file_name], '/').values[-1]
-            label = tf.string_split([label], '-').values[0]
-            label = tf.string_to_number(label, tf.int32)
-            label = tf.one_hot(label, self.num_classes)
-
-            labels.append(label)
-            images.append(image)
+        with tf.name_scope('reader_scope'):
+            for key in xrange(self.batch_size):
+                _, content = self.reader.read(self.fileQueue)
+                example = tf.parse_single_example(content, features={
+                    'label': tf.FixedLenFeature([], tf.int64),
+                    'image': tf.FixedLenFeature([], tf.string)
+                })
+                image = tf.decode_raw(example['image'], tf.float32)
+                image = tf.reshape(image, [FLAGS.input_height, FLAGS.input_width, FLAGS.input_channels])
+                label = example['label']
+                label = tf.one_hot(label, self.num_classes)
+                labels.append(label)
+                images.append(image)
 
         return labels, images
 
 
 if __name__ == '__main__':
-    reader = Reader('saves', '*.jpg', 120, 113)
+    reader = Reader('Records', '*.tfrecords', 16, 113)
     sess = tf.InteractiveSession()
     tf.train.start_queue_runners(sess=sess)
-    label, image = reader.read()
-    print sess.run(label)
+    labels, images = reader.read()
+    print images[0].get_shape()
+    # print sess.run(labels)

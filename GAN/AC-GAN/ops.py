@@ -2,7 +2,6 @@ import tensorflow as tf
 
 
 def conv_2d(x, num_filters, kernel_size=5, stride=2, scope='conv'):
-    print x
     with tf.variable_scope(scope):
         w = tf.get_variable(
             'w', [kernel_size, kernel_size, x[0].get_shape()[-1], num_filters],
@@ -24,7 +23,6 @@ def conv2d_transpose(x,
                      kernel_size=5,
                      stride=2,
                      scope="conv_transpose"):
-
     with tf.variable_scope(scope):
         w = tf.get_variable(
             'w',
@@ -44,7 +42,6 @@ def conv2d_transpose(x,
 
 
 def fc(x, num_outputs, scope="fc"):
-
     with tf.variable_scope(scope):
         w = tf.get_variable(
             'w', [x.get_shape()[-1], num_outputs],
@@ -65,7 +62,6 @@ def batch_norm(x,
                is_training=True,
                reuse=False,
                scope='batch_norm'):
-
     bn = tf.contrib.layers.batch_norm(
         x,
         decay=decay,
