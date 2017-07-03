@@ -10,7 +10,7 @@ tf.app.flags.DEFINE_string("summaryDir", "./summary/", "TensorBoard路径")
 tf.app.flags.DEFINE_string('buckets', './Records/', '图片文件夹')
 tf.app.flags.DEFINE_string("checkpointDir", "./checkpoint_dir/", "模型保存路径")
 tf.app.flags.DEFINE_integer('train_steps', 100000, '训练次数')
-tf.app.flags.DEFINE_float('learning_rate', 0.01, '学习速率')
+tf.app.flags.DEFINE_float('learning_rate', 2e-4, '学习速率')
 tf.app.flags.DEFINE_float('beta1', 0.5, 'Adam动量')
 tf.app.flags.DEFINE_integer('num_classes', 133, '类型数')
 

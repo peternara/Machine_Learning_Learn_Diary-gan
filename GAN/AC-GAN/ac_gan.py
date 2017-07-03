@@ -5,11 +5,11 @@ import tensorflow as tf
 
 import ops
 
-tf.app.flags.DEFINE_integer('input_height', 64, '输入图片高度')
-tf.app.flags.DEFINE_integer('input_width', 64, '输入图片宽度')
+tf.app.flags.DEFINE_integer('input_height', 256, '输入图片高度')
+tf.app.flags.DEFINE_integer('input_width', 256, '输入图片宽度')
 tf.app.flags.DEFINE_integer('input_channels', 3, '图片通道')
-tf.app.flags.DEFINE_integer('output_height', 64, '输出图片高度')
-tf.app.flags.DEFINE_integer('output_width', 64, '输出图片宽度')
+tf.app.flags.DEFINE_integer('output_height', 256, '输出图片高度')
+tf.app.flags.DEFINE_integer('output_width', 256, '输出图片宽度')
 tf.app.flags.DEFINE_integer('z_dim', 100, '噪音数目')
 tf.app.flags.DEFINE_integer('batch_size', 64, '批大小')
 FLAGS = tf.app.flags.FLAGS
@@ -58,11 +58,13 @@ def loss(labels,
             logits=class_logits_fake,
             labels=labels))
 
-    d_loss = source_loss_real + source_loss_fake + class_loss_real + class_loss_fake
+    total_loss = tf.add_n(tf.get_collection('l2_loss'))
+    dc_loss = class_loss_real + class_loss_fake + total_loss
 
-    g_loss = g_loss + class_loss_real + class_loss_fake
+    d_loss = source_loss_real + source_loss_fake + dc_loss
 
-    dc_loss = class_loss_real + class_loss_fake
+    g_loss = g_loss + dc_loss
+
     return d_loss, g_loss, dc_loss
 
 
@@ -137,7 +139,7 @@ def discriminator(images, labels, reuse=False):
 
         # class logits
         class_logits = ops.fc(
-            h5_reshape, FLAGS.num_classes, scope="class_logits")
+            h5_reshape, FLAGS.num_classes, scope="class_logits", decay=4e-3)
 
         return source_logits, class_logits
 
@@ -206,6 +208,7 @@ def generator(z, labels):
             scope="conv_tranpose5")
         # tanh
         h5 = tf.nn.tanh(conv5)
+        h5 = tf.image.resize_image_with_crop_or_pad(h5, FLAGS.output_height, FLAGS.output_width)
 
     return h5
 

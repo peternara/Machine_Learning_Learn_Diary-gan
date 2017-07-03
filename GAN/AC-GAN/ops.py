@@ -41,7 +41,7 @@ def conv2d_transpose(x,
         return conv_transpose
 
 
-def fc(x, num_outputs, scope="fc"):
+def fc(x, num_outputs, scope="fc", decay=False):
     with tf.variable_scope(scope):
         w = tf.get_variable(
             'w', [x.get_shape()[-1], num_outputs],
@@ -51,6 +51,10 @@ def fc(x, num_outputs, scope="fc"):
             'biases', [num_outputs], initializer=tf.constant_initializer(0.1))
 
         output = tf.nn.bias_add(tf.matmul(x, w), biases)
+
+        if decay:
+            l2_loss = tf.multiply(tf.nn.l2_loss(w, 'l2_loss'), decay)
+            tf.add_to_collection('l2_loss', l2_loss)
 
         return output
 
