@@ -9,8 +9,8 @@ FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_string("summaryDir", "./summary/", "TensorBoard路径")
 tf.app.flags.DEFINE_string('buckets', './Records/', '图片文件夹')
 tf.app.flags.DEFINE_string("checkpointDir", "./checkpoint_dir/", "模型保存路径")
-tf.app.flags.DEFINE_integer('train_steps', 10000, '训练次数')
-tf.app.flags.DEFINE_float('learning_rate', 2e-4, '学习速率')
+tf.app.flags.DEFINE_integer('train_steps', 100000, '训练次数')
+tf.app.flags.DEFINE_float('learning_rate', 0.01, '学习速率')
 tf.app.flags.DEFINE_float('beta1', 0.5, 'Adam动量')
 tf.app.flags.DEFINE_integer('num_classes', 133, '类型数')
 
@@ -63,9 +63,8 @@ def train():
         ac_gan.load(sess, saver, checkpointDir=FLAGS.checkpointDir)
 
         summary_writer = tf.summary.FileWriter(FLAGS.summaryDir, graph=sess.graph)
-        training_steps = FLAGS.train_steps
 
-        for step in xrange(training_steps):
+        for step in xrange(FLAGS.train_steps):
 
             random_z = np.random.uniform(
                 -1, 1, size=(FLAGS.batch_size, FLAGS.z_dim)).astype(np.float32)
@@ -94,7 +93,8 @@ def main(argv=None):
         tf.gfile.MkDir(FLAGS.summaryDir)
     if not tf.gfile.Exists(FLAGS.checkpointDir):
         tf.gfile.MkDir(FLAGS.checkpointDir)
-
+    for i in FLAGS.__flags:
+        print "{}: {}".format(i, FLAGS.__flags[i])
     train()
 
 

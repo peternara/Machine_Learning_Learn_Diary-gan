@@ -11,7 +11,6 @@ tf.app.flags.DEFINE_integer('input_channels', 3, '图片通道')
 tf.app.flags.DEFINE_integer('output_height', 64, '输出图片高度')
 tf.app.flags.DEFINE_integer('output_width', 64, '输出图片宽度')
 tf.app.flags.DEFINE_integer('z_dim', 100, '噪音数目')
-tf.app.flags.DEFINE_boolean('crop', True, '是否裁剪数据')
 tf.app.flags.DEFINE_integer('batch_size', 64, '批大小')
 FLAGS = tf.app.flags.FLAGS
 
@@ -125,15 +124,20 @@ def discriminator(images, labels, reuse=False):
         # leaky ReLU
         h4 = ops.leaky_relu(norm4)
 
+        conv5 = ops.conv_2d(h4, 1024, scope="conv5")
+
+        norm5 = ops.batch_norm(conv5, scope="batch_norm5", is_training=True)
+
+        h5 = ops.leaky_relu(norm5)
         # reshape
-        h4_reshape = tf.reshape(h4, [FLAGS.batch_size, -1])
+        h5_reshape = tf.reshape(h5, [FLAGS.batch_size, -1])
 
         # source logits
-        source_logits = ops.fc(h4_reshape, 1, scope="source_logits")
+        source_logits = ops.fc(h5_reshape, 1, scope="source_logits")
 
         # class logits
         class_logits = ops.fc(
-            h4_reshape, FLAGS.num_classes, scope="class_logits")
+            h5_reshape, FLAGS.num_classes, scope="class_logits")
 
         return source_logits, class_logits
 
@@ -145,8 +149,8 @@ def generator(z, labels):
         # project z and reshape
         oh, ow = FLAGS.output_height, FLAGS.output_width
 
-        z_labels_ = ops.fc(z_labels, 512 * oh / 16 * ow / 16, scope="project")
-        z_labels_ = tf.reshape(z_labels_, [-1, oh / 16, ow / 16, 512])
+        z_labels_ = ops.fc(z_labels, 1024 * oh / 32 * ow / 32, scope="project")
+        z_labels_ = tf.reshape(z_labels_, [-1, oh / 32, ow / 32, 1024])
 
         # batch norm
         norm0 = ops.batch_norm(
@@ -157,7 +161,7 @@ def generator(z, labels):
 
         # conv1
         conv1 = ops.conv2d_transpose(
-            h0, [FLAGS.batch_size, oh / 8, ow / 8, 256],
+            h0, [FLAGS.batch_size, oh / 16, ow / 16, 512],
             scope="conv_tranpose1")
 
         # batch norm
@@ -168,7 +172,7 @@ def generator(z, labels):
 
         # conv2
         conv2 = ops.conv2d_transpose(
-            h1, [FLAGS.batch_size, oh / 4, ow / 4, 128],
+            h1, [FLAGS.batch_size, oh / 8, ow / 8, 256],
             scope="conv_tranpose2")
 
         # batch norm
@@ -179,7 +183,7 @@ def generator(z, labels):
 
         # conv3
         conv3 = ops.conv2d_transpose(
-            h2, [FLAGS.batch_size, oh / 2, ow / 2, 64], scope="conv_tranpose3")
+            h2, [FLAGS.batch_size, oh / 4, ow / 4, 128], scope="conv_tranpose3")
 
         # batch norm
         norm3 = ops.batch_norm(conv3, scope="batch_norm3", is_training=True)
@@ -189,13 +193,21 @@ def generator(z, labels):
 
         # conv4
         conv4 = ops.conv2d_transpose(
-            h3, [FLAGS.batch_size, oh, ow, FLAGS.input_channels],
+            h3, [FLAGS.batch_size, oh / 2, ow / 2, 64],
             scope="conv_tranpose4")
+        # batch norm
+        norm4 = ops.batch_norm(conv4, scope="batch_norm4", is_training=True)
 
+        # ReLU
+        h4 = tf.nn.relu(norm4)
+
+        conv5 = ops.conv2d_transpose(
+            h4, [FLAGS.batch_size, oh, ow, FLAGS.input_channels],
+            scope="conv_tranpose5")
         # tanh
-        h4 = tf.nn.tanh(conv4)
+        h5 = tf.nn.tanh(conv5)
 
-    return h4
+    return h5
 
 
 def load(sess, saver, checkpointDir):

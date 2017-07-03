@@ -9,7 +9,7 @@ flags = tf.flags.FLAGS
 tf.app.flags.DEFINE_string('pattem', '*.jpg', 'pattem')
 tf.app.flags.DEFINE_string('checkpointDir', './Records/', 'checkpointDir')
 
-image_path = './saves/'
+image_path = './train/'
 
 
 def main(arg=None):
@@ -41,8 +41,8 @@ def main(arg=None):
             # os.remove(file)
             continue
         else:
+            image = tf.image.resize_image_with_crop_or_pad(image, 256, 256)
             image = tf.image.per_image_standardization(image)
-            image = tf.image.resize_image_with_crop_or_pad(image, 64, 64)
 
             label = os.path.split(file)[-1].split('-')[0]
 
