@@ -103,7 +103,7 @@ def discriminator(images, labels, reuse=False):
         conv2 = ops.conv_2d(h1, 128, scope="conv2")
 
         # batch norm
-        norm2 = ops.batch_norm(conv2, scope="batch_norm2", is_training=True)
+        norm2 = ops.batch_norm(conv2, scope="batch_norm2", is_training=FLAGS.is_train)
 
         # leaky ReLU
         h2 = ops.leaky_relu(norm2)
@@ -112,7 +112,7 @@ def discriminator(images, labels, reuse=False):
         conv3 = ops.conv_2d(h2, 256, scope="conv3")
 
         # batch norm
-        norm3 = ops.batch_norm(conv3, scope="batch_norm3", is_training=True)
+        norm3 = ops.batch_norm(conv3, scope="batch_norm3", is_training=FLAGS.is_train)
 
         # leaky ReLU
         h3 = ops.leaky_relu(norm3)
@@ -121,14 +121,14 @@ def discriminator(images, labels, reuse=False):
         conv4 = ops.conv_2d(h3, 512, scope="conv4")
 
         # batch norm
-        norm4 = ops.batch_norm(conv4, scope="batch_norm4", is_training=True)
+        norm4 = ops.batch_norm(conv4, scope="batch_norm4", is_training=FLAGS.is_train)
 
         # leaky ReLU
         h4 = ops.leaky_relu(norm4)
 
         conv5 = ops.conv_2d(h4, 1024, scope="conv5")
 
-        norm5 = ops.batch_norm(conv5, scope="batch_norm5", is_training=True)
+        norm5 = ops.batch_norm(conv5, scope="batch_norm5", is_training=FLAGS.is_train)
 
         h5 = ops.leaky_relu(norm5)
         # reshape
@@ -167,7 +167,7 @@ def generator(z, labels):
             scope="conv_tranpose1")
 
         # batch norm
-        norm1 = ops.batch_norm(conv1, scope="batch_norm1", is_training=True)
+        norm1 = ops.batch_norm(conv1, scope="batch_norm1", is_training=FLAGS.is_train)
 
         # ReLU
         h1 = tf.nn.relu(norm1)
@@ -178,7 +178,7 @@ def generator(z, labels):
             scope="conv_tranpose2")
 
         # batch norm
-        norm2 = ops.batch_norm(conv2, scope="batch_norm2", is_training=True)
+        norm2 = ops.batch_norm(conv2, scope="batch_norm2", is_training=FLAGS.is_train)
 
         # ReLU
         h2 = tf.nn.relu(norm2)
@@ -188,7 +188,7 @@ def generator(z, labels):
             h2, [FLAGS.batch_size, oh / 4, ow / 4, 128], scope="conv_tranpose3")
 
         # batch norm
-        norm3 = ops.batch_norm(conv3, scope="batch_norm3", is_training=True)
+        norm3 = ops.batch_norm(conv3, scope="batch_norm3", is_training=FLAGS.is_train)
 
         # ReLU
         h3 = tf.nn.relu(norm3)
@@ -198,7 +198,7 @@ def generator(z, labels):
             h3, [FLAGS.batch_size, oh / 2, ow / 2, 64],
             scope="conv_tranpose4")
         # batch norm
-        norm4 = ops.batch_norm(conv4, scope="batch_norm4", is_training=True)
+        norm4 = ops.batch_norm(conv4, scope="batch_norm4", is_training=FLAGS.is_train)
 
         # ReLU
         h4 = tf.nn.relu(norm4)
