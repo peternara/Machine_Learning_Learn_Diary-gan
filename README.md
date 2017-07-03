@@ -96,14 +96,16 @@ Trying to understand
 ---
 
 1. [X] train_sets download -> me
-2. [] coding -> me
-3. [] make test_sets -> me and teammate
-4. [] optimize
+2. [X] coding -> me
+3. [X] make test_sets -> me and teammate
+4. [X] train
+5. [] optimize
 
 [x] Cloth Generator with GC-GAN
 ---
-running in
-<http://59.67.107.117:3028/>
+Failed because of output image is too big and sample sets is not enough
+
+Optimize it in 2 days
 
 [X] Aliyun machine learning platform script
 1. [X] image resizer
