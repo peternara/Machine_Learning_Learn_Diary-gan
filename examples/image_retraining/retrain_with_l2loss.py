@@ -142,7 +142,7 @@ def create_image_lists(buckets, testing_percentage, validation_percentage):
             continue
         extensions = ['jpg', 'jpeg', 'JPG', 'JPEG']
         file_list = []
-        dir_name = os.path.basename(sub_dir)
+        dir_name = os.path.basename(sub_dir[0:-1])
         if dir_name == buckets:
             continue
         print("Looking for images in '" + dir_name + "'")
@@ -732,11 +732,15 @@ def add_final_training_ops(class_count, final_tensor_name, bottleneck_tensor):
     with tf.name_scope(layer_name):
         with tf.name_scope('full_connect_hidden_1'):
             w = tf.Variable(tf.truncated_normal([BOTTLENECK_TENSOR_SIZE, 1024], stddev=0.001))
+            l2_loss = tf.nn.l2_loss(w, 'l2_loss_h1')
+            tf.add_to_collection('loss', l2_loss)
             b = tf.constant(0.1, shape=[1024])
             h1 = tf.nn.relu(tf.matmul(bottleneck_input, w) + b, name='hidden_2')
 
         with tf.name_scope('full_connect_hidden_2'):
             w = tf.Variable(tf.truncated_normal([1024, 512], stddev=0.001))
+            l2_loss = tf.nn.l2_loss(w, 'l2_loss_h2')
+            tf.add_to_collection('loss', l2_loss)
             b = tf.constant(0.1, shape=[512])
             h2 = tf.nn.relu(tf.matmul(h1, w) + b, name='hidden_2')
             h2 = tf.nn.dropout(h2, keep_prob=keep_prob[0])
@@ -755,6 +759,8 @@ def add_final_training_ops(class_count, final_tensor_name, bottleneck_tensor):
             labels=ground_truth_input, logits=logits)
         with tf.name_scope('total'):
             cross_entropy_mean = tf.reduce_mean(cross_entropy)
+            tf.add_to_collection('loss', cross_entropy_mean)
+            cross_entropy_mean = tf.add_n(tf.get_collection('loss'), name='total_loss')
     tf.summary.scalar('cross_entropy', cross_entropy_mean)
 
     with tf.name_scope('train'):
@@ -842,11 +848,11 @@ def main(_):
 
         # Merge all the summaries and write them out to the summaryDir
         merged = tf.summary.merge_all()
-        train_writer = tf.summary.FileWriter(FLAGS.summaryDir + 'train',
+        train_writer = tf.summary.FileWriter(FLAGS.summaryDir + 'train_with_l2loss',
                                              sess.graph)
 
         validation_writer = tf.summary.FileWriter(
-            FLAGS.summaryDir + 'validation')
+            FLAGS.summaryDir + 'validation_with_l2loss')
 
         # Set up all our weights to their initial default values.
         init = tf.global_variables_initializer()
@@ -940,19 +946,19 @@ if __name__ == '__main__':
     parser.add_argument(
         '--buckets',
         type=str,
-        default='./train',
+        default='train',
         help='Path to folders of labeled images.'
     )
     parser.add_argument(
         '--output_graph',
         type=str,
-        default='./output_graph.pb',
+        default='oss://mlearn/Baidu_JS/output_with_l2_loss/model/output_graph_with_l2_loss.pb',
         help='Where to save the trained graph.'
     )
     parser.add_argument(
         '--output_labels',
         type=str,
-        default='./output_labels.txt',
+        default='oss://mlearn/Baidu_JS/output_with_l2_loss/model/output_labels.txt',
         help='Where to save the trained graph\'s labels.'
     )
     parser.add_argument(
@@ -964,7 +970,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--how_many_training_steps',
         type=int,
-        default=5000,
+        default=6000,
         help='How many training steps to run before ending.'
     )
     parser.add_argument(
@@ -1032,7 +1038,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--checkpointDir',
         type=str,
-        default='./',
+        default='oss://mlearn/Baidu_JS/output_with_l2_loss',
         help="""\
       Path to classify_image_graph_def.pb,
       imagenet_synset_to_human_label_map.txt, and
@@ -1042,7 +1048,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--bottleneck_dir',
         type=str,
-        default='./bottleneck',
+        default='oss://mlearn/Baidu_JS/output_with_l2_loss/model',
         help='Path to cache bottleneck layer values as files.'
     )
     parser.add_argument(

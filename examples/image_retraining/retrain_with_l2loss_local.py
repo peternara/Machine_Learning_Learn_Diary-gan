@@ -721,7 +721,7 @@ def add_final_training_ops(class_count, final_tensor_name, bottleneck_tensor):
         bottleneck_input = tf.placeholder_with_default(
             bottleneck_tensor, shape=[None, BOTTLENECK_TENSOR_SIZE],
             name='BottleneckInputPlaceholder')
-        keep_prob = tf.placeholder_with_default([0.5], shape=[1], name="keep_prob")
+
         ground_truth_input = tf.placeholder(tf.float32,
                                             [None, class_count],
                                             name='GroundTruthInput')
@@ -730,21 +730,62 @@ def add_final_training_ops(class_count, final_tensor_name, bottleneck_tensor):
     # to see in TensorBoard
     layer_name = 'final_training_ops'
     with tf.name_scope(layer_name):
-        with tf.name_scope('full_connect_hidden_1'):
-            w = tf.Variable(tf.truncated_normal([BOTTLENECK_TENSOR_SIZE, 1024], stddev=0.001))
-            b = tf.constant(0.1, shape=[1024])
-            h1 = tf.nn.relu(tf.matmul(bottleneck_input, w) + b, name='hidden_2')
+        with tf.name_scope('weights'):
+            initial_value_h1 = tf.truncated_normal([BOTTLENECK_TENSOR_SIZE, 1024],
+                                                   stddev=0.001)
 
-        with tf.name_scope('full_connect_hidden_2'):
-            w = tf.Variable(tf.truncated_normal([1024, 512], stddev=0.001))
-            b = tf.constant(0.1, shape=[512])
-            h2 = tf.nn.relu(tf.matmul(h1, w) + b, name='hidden_2')
-            h2 = tf.nn.dropout(h2, keep_prob=keep_prob[0])
+            l2_loss_h1 = tf.nn.l2_loss(initial_value_h1)
+            l2_loss_h1 = tf.multiply(l2_loss_h1, 4e-3, 'l2_loss_h1')
+            tf.add_to_collection('loss', l2_loss_h1)
 
-        with tf.name_scope('full_connect'):
-            w = tf.Variable(tf.truncated_normal([512, class_count], stddev=0.001))
-            b = tf.constant(0.1, shape=[class_count])
-            logits = tf.matmul(h2, w) + b
+            layer_weights_h1 = tf.Variable(initial_value_h1, name='final_weights_h1')
+
+            initial_value_h2 = tf.truncated_normal([1024, 512],
+                                                   stddev=0.001)
+
+            l2_loss_h2 = tf.nn.l2_loss(initial_value_h2)
+            l2_loss_h2 = tf.multiply(l2_loss_h2, 4e-3, 'l2_loss_h2')
+            tf.add_to_collection('loss', l2_loss_h2)
+
+            layer_weights_h2 = tf.Variable(initial_value_h2, name='final_weights_h2')
+
+            initial_value = tf.truncated_normal([512, class_count],
+                                                stddev=0.001)
+
+            l2_loss = tf.nn.l2_loss(initial_value)
+            l2_loss = tf.multiply(l2_loss, 4e-3, 'l2_loss')
+            tf.add_to_collection('loss', l2_loss)
+
+            layer_weights = tf.Variable(initial_value, name='final_weights')
+
+            variable_summaries(layer_weights)
+
+        with tf.name_scope('biases'):
+            layer_biases_h1 = tf.Variable(tf.zeros([1024]), name='final_biases_h1')
+
+            layer_biases_h2 = tf.Variable(tf.zeros([512]), name='final_biases_h2')
+
+            layer_biases = tf.Variable(tf.zeros([class_count]), name='final_biases')
+
+            variable_summaries(layer_biases)
+
+        with tf.name_scope('Wx_plus_b'):
+            keep_prob = tf.placeholder_with_default([0.5], shape=[1], name='drop_out_keep_prob')
+
+            h1 = tf.matmul(bottleneck_input, layer_weights_h1) + layer_biases_h1
+
+            h1 = tf.nn.relu(h1, name='final_hidden_1')
+
+            h1 = tf.nn.dropout(h1, keep_prob[0])
+
+            h2 = tf.matmul(h1, layer_weights_h2) + layer_biases_h2
+
+            h2 = tf.nn.relu(h2, name='final_hidden_h2')
+
+            h2 = tf.nn.dropout(h2, keep_prob[0])
+
+            logits = tf.matmul(h2, layer_weights) + layer_biases
+
             tf.summary.histogram('pre_activations', logits)
 
     final_tensor = tf.nn.softmax(logits, name=final_tensor_name)
@@ -755,6 +796,8 @@ def add_final_training_ops(class_count, final_tensor_name, bottleneck_tensor):
             labels=ground_truth_input, logits=logits)
         with tf.name_scope('total'):
             cross_entropy_mean = tf.reduce_mean(cross_entropy)
+            tf.add_to_collection('loss', cross_entropy_mean)
+            cross_entropy_mean = tf.add_n(tf.get_collection('loss'), name='total_loss')
     tf.summary.scalar('cross_entropy', cross_entropy_mean)
 
     with tf.name_scope('train'):
@@ -1091,3 +1134,4 @@ if __name__ == '__main__':
     FLAGS, unparsed = parser.parse_known_args()
     print(FLAGS)
     tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)
+
