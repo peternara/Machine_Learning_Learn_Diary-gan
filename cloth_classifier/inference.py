@@ -47,7 +47,7 @@ def inference(image):
     with tf.variable_scope('drop_out_1') as scope:
         """
         弃权层
-        弃权参数: 0.3
+        弃权参数: 0.5
         """
         h_cov1_drop = tf.nn.dropout(conv1, 0.5, name=scope.name)
 
@@ -80,7 +80,7 @@ def inference(image):
     with tf.variable_scope('drop_out_2') as scope:
         """
         弃权层
-        弃权参数: 0.3
+        弃权参数: 0.5
         """
         h_cov2_drop = tf.nn.dropout(conv2, 0.5, name=scope.name)
 

@@ -9,11 +9,12 @@ FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_string("summaryDir", "./summary/", "TensorBoard路径")
 tf.app.flags.DEFINE_string('buckets', './Records/', '图片文件夹')
 tf.app.flags.DEFINE_string("checkpointDir", "./checkpoint_dir/", "模型保存路径")
-tf.app.flags.DEFINE_integer('train_steps', 100000, '训练次数')
-tf.app.flags.DEFINE_float('learning_rate', 2e-4, '学习速率')
+tf.app.flags.DEFINE_integer('train_steps', 10000, '训练次数')
+tf.app.flags.DEFINE_float('learning_rate', 1e-4, '学习速率')
 tf.app.flags.DEFINE_float('beta1', 0.5, 'Adam动量')
 tf.app.flags.DEFINE_bool('is_train', True, '是否在训练')
 tf.app.flags.DEFINE_integer('num_classes', 133, '类型数')
+tf.app.flags.DEFINE_integer('batch_size', 5, '批大小')
 
 
 def train():
@@ -63,26 +64,25 @@ def train():
 
         ac_gan.load(sess, saver, checkpointDir=FLAGS.checkpointDir)
 
-        summary_writer = tf.summary.FileWriter(FLAGS.summaryDir, graph=sess.graph)
+        # summary_writer = tf.summary.FileWriter(FLAGS.summaryDir, graph=sess.graph)
 
         for step in xrange(FLAGS.train_steps):
-
             random_z = np.random.uniform(
                 -1, 1, size=(FLAGS.batch_size, FLAGS.z_dim)).astype(np.float32)
+            print "step: {}, d_loss, g_loss, dc_loss: ".format(step), sess.run([d_loss, g_loss, dc_loss], feed_dict={z: random_z})
 
             sess.run(train_d_op, feed_dict={z: random_z})
             sess.run(train_g_op, feed_dict={z: random_z})
-            sess.run(train_g_op, feed_dict={z: random_z})
-            print "step: {}".format(step)
-            if step % 10 == 0:
-                merge_op = tf.summary.merge([summary_image, summary_gloss, summary_dloss, summary_dcloss])
-            else:
-                merge_op = tf.summary.merge([summary_gloss, summary_dloss, summary_dcloss])
-            merge_data = sess.run(merge_op, feed_dict={z: random_z})
-            summary_writer.add_summary(merge_data, step)
-            if step % 100 == 0:
-                saver.save(sess, os.path.join(FLAGS.checkpointDir, 'baiduJS.model'), global_step=step)
-        summary_writer.close()
+            # print "step: {}".format(step)
+            # if step % 10 == 0:
+            # `merge_op = tf.summary.merge([summary_image, summary_gloss, summary_dloss, summary_dcloss])
+            # else:
+            #     merge_op = tf.summary.merge([summary_gloss, summary_dloss, summary_dcloss])
+            # merge_data = sess.run(merge_op, feed_dict={z: random_z})
+            # summary_writer.add_summary(merge_data, step)
+            # if step % 100 == 0:
+            #     saver.save(sess, os.path.join(FLAGS.checkpointDir, 'baiduJS.model'), global_step=step)
+        # summary_writer.close()
 
 
 def main(argv=None):

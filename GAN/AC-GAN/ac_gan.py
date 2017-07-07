@@ -8,22 +8,27 @@ import ops
 tf.app.flags.DEFINE_integer('input_height', 256, '输入图片高度')
 tf.app.flags.DEFINE_integer('input_width', 256, '输入图片宽度')
 tf.app.flags.DEFINE_integer('input_channels', 3, '图片通道')
-tf.app.flags.DEFINE_integer('output_height', 256, '输出图片高度')
-tf.app.flags.DEFINE_integer('output_width', 256, '输出图片宽度')
+tf.app.flags.DEFINE_integer('output_height', 128, '输出图片高度')
+tf.app.flags.DEFINE_integer('output_width', 128, '输出图片宽度')
 tf.app.flags.DEFINE_integer('z_dim', 100, '噪音数目')
-tf.app.flags.DEFINE_integer('batch_size', 64, '批大小')
 FLAGS = tf.app.flags.FLAGS
 
 
 def inference(images, labels, z):
     generated_images = generator(z, labels)
-    source_logits_real, class_logits_real = discriminator(images, labels)
-    source_logits_fake, class_logits_fake = discriminator(generated_images, labels, reuse=True)
+    source_logits_real, class_logits_real = discriminator(images)
+    source_logits_fake, class_logits_fake = discriminator(generated_images, reuse=True)
 
     return [
         source_logits_real, class_logits_real, source_logits_fake,
         class_logits_fake, generated_images
     ]
+
+
+def predict(images):
+    source_logits_real, class_logits_real = discriminator_predict(images)
+    class_logits = tf.arg_max(class_logits_real, 1)
+    return class_logits
 
 
 def loss(labels,
@@ -33,21 +38,21 @@ def loss(labels,
          class_logits_fake,
          generated_images):
     #   判断图片真假损失
-    source_loss_real = tf.reduce_mean(
-        tf.nn.sigmoid_cross_entropy_with_logits(
-            logits=source_logits_real,
-            labels=tf.ones_like(source_logits_real)
-        ))
-
-    source_loss_fake = tf.reduce_mean(
-        tf.nn.sigmoid_cross_entropy_with_logits(
-            logits=source_logits_fake,
-            labels=tf.zeros_like(source_logits_fake)))
-    #   生成图片损失
-    g_loss = tf.reduce_mean(
-        tf.nn.sigmoid_cross_entropy_with_logits(
-            logits=source_logits_fake,
-            labels=tf.ones_like(source_logits_fake)))
+    # source_loss_real = tf.reduce_mean(
+    #     tf.nn.sigmoid_cross_entropy_with_logits(
+    #         logits=source_logits_real,
+    #         labels=tf.ones_like(source_logits_real)
+    #     ))
+    #
+    # source_loss_fake = tf.reduce_mean(
+    #     tf.nn.sigmoid_cross_entropy_with_logits(
+    #         logits=source_logits_fake,
+    #         labels=tf.zeros_like(source_logits_fake)))
+    #  生成图片损失
+    # g_loss = tf.reduce_mean(
+    #     tf.nn.sigmoid_cross_entropy_with_logits(
+    #         logits=source_logits_fake,
+    #         labels=tf.ones_like(source_logits_fake)))
     #   判断图片类别损失
     class_loss_real = tf.reduce_mean(
         tf.nn.softmax_cross_entropy_with_logits(
@@ -58,13 +63,11 @@ def loss(labels,
             logits=class_logits_fake,
             labels=labels))
 
-    total_loss = tf.add_n(tf.get_collection('l2_loss'))
-    dc_loss = class_loss_real + class_loss_fake + total_loss
+    l2_loss = tf.add_n(tf.get_collection('l2_loss'))
+    dc_loss = class_loss_real + class_loss_fake + l2_loss
 
-    d_loss = source_loss_real + source_loss_fake + dc_loss
-
-    g_loss = g_loss + dc_loss
-
+    d_loss = -tf.reduce_mean(source_logits_real) - tf.reduce_mean(source_logits_real)
+    g_loss = -tf.reduce_mean(source_logits_fake)
     return d_loss, g_loss, dc_loss
 
 
@@ -78,17 +81,17 @@ def train(d_loss, g_loss):
         tf.GraphKeys.TRAINABLE_VARIABLES, scope='generator')
 
     # train discriminator
-    d_optimzer = tf.train.AdamOptimizer(FLAGS.learning_rate, beta1=FLAGS.beta1)
-    train_d_op = d_optimzer.minimize(d_loss, var_list=d_vars)
+    d_optimzer = tf.train.RMSPropOptimizer(FLAGS.learning_rate)
+    train_d_op = d_optimzer.minimize(-d_loss, var_list=d_vars)
 
     # train generator
-    g_optimzer = tf.train.AdamOptimizer(FLAGS.learning_rate, beta1=FLAGS.beta1)
+    g_optimzer = tf.train.RMSPropOptimizer(FLAGS.learning_rate)
     train_g_op = g_optimzer.minimize(g_loss, var_list=g_vars)
 
     return train_d_op, train_g_op
 
 
-def discriminator(images, labels, reuse=False):
+def discriminator(images, reuse=False):
     with tf.variable_scope("discriminator") as scope:
         if reuse:
             scope.reuse_variables()
@@ -110,13 +113,67 @@ def discriminator(images, labels, reuse=False):
 
         # conv3
         conv3 = ops.conv_2d(h2, 256, scope="conv3")
-
         # batch norm
         norm3 = ops.batch_norm(conv3, scope="batch_norm3", is_training=FLAGS.is_train)
 
         # leaky ReLU
         h3 = ops.leaky_relu(norm3)
+        # conv4
+        conv4 = ops.conv_2d(h3, 512, scope="conv4")
 
+        # batch norm
+        norm4 = ops.batch_norm(conv4, scope="batch_norm4", is_training=FLAGS.is_train)
+
+        # leaky ReLU
+        h4 = ops.leaky_relu(norm4)
+
+        conv5 = ops.conv_2d(h4, 1024, scope="conv5")
+
+        conv5 = tf.nn.dropout(conv5, 0.5, name='conv_5_drop_out')
+
+        norm5 = ops.batch_norm(conv5, scope="batch_norm5", is_training=FLAGS.is_train)
+
+        h5 = ops.leaky_relu(norm5)
+        # reshape
+        h5_reshape = tf.reshape(h5, [FLAGS.batch_size, -1])
+
+        # source logits
+        source_logits = ops.fc(h5_reshape, 1, scope="source_logits")
+
+        # class logits
+        class_logits = ops.fc(
+            h5_reshape, FLAGS.num_classes, scope="class_logits", decay=4e-3)
+
+        return source_logits, class_logits
+
+
+def discriminator_predict(images, reuse=False):
+    with tf.variable_scope("discriminator") as scope:
+        if reuse:
+            scope.reuse_variables()
+
+        # conv1
+        conv1 = ops.conv_2d(images, 64, scope="conv1")
+
+        # leakly ReLu
+        h1 = ops.leaky_relu(conv1)
+
+        # conv2
+        conv2 = ops.conv_2d(h1, 128, scope="conv2")
+
+        # batch norm
+        norm2 = ops.batch_norm(conv2, scope="batch_norm2", is_training=FLAGS.is_train)
+
+        # leaky ReLU
+        h2 = ops.leaky_relu(norm2)
+
+        # conv3
+        conv3 = ops.conv_2d(h2, 256, scope="conv3")
+        # batch norm
+        norm3 = ops.batch_norm(conv3, scope="batch_norm3", is_training=FLAGS.is_train)
+
+        # leaky ReLU
+        h3 = ops.leaky_relu(norm3)
         # conv4
         conv4 = ops.conv_2d(h3, 512, scope="conv4")
 
@@ -208,7 +265,8 @@ def generator(z, labels):
             scope="conv_tranpose5")
         # tanh
         h5 = tf.nn.tanh(conv5)
-        h5 = tf.image.resize_image_with_crop_or_pad(h5, FLAGS.output_height, FLAGS.output_width)
+
+        h5 = tf.map_fn(lambda i: tf.image.resize_images(i, [FLAGS.input_height, FLAGS.input_width]), h5)
 
     return h5
 
