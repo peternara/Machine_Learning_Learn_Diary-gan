@@ -758,13 +758,17 @@ def add_final_training_ops(class_count, final_tensor_name, bottleneck_tensor):
             variable_summaries(layer_biases)
 
         with tf.name_scope('Wx_plus_b'):
-            keep_prob = tf.placeholder_with_default([0.8], shape=[1], name='drop_out_keep_prob')
+            keep_prob = tf.placeholder_with_default([0.5], shape=[1], name='drop_out_keep_prob')
 
             h1 = tf.matmul(bottleneck_input, layer_weights_h1) + layer_biases_h1
+
+            h1 = tf.nn.relu(h1, name='final_hidden_1')
 
             h1 = tf.nn.dropout(h1, keep_prob[0])
 
             h2 = tf.matmul(h1, layer_weights_h2) + layer_biases_h2
+
+            h2 = tf.nn.relu(h2, name='final_hidden_h2')
 
             h2 = tf.nn.dropout(h2, keep_prob[0])
 
