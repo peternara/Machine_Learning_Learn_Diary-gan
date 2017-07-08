@@ -6,7 +6,7 @@ tf.app.flags.DEFINE_string('buckets', './test', '图片文件夹')
 tf.app.flags.DEFINE_string("checkpointDir", "./", "模型保存路径")
 
 flags = tf.app.flags.FLAGS
-with tf.gfile.FastGFile(os.path.join(flags.checkpointDir, 'output_graph_with_l2_loss.pb'), 'rb') as f:
+with tf.gfile.FastGFile(os.path.join(flags.checkpointDir, 'output_graph.pb'), 'rb') as f:
     grapf_def = tf.GraphDef()
     grapf_def.ParseFromString(f.read())
     final_result_tensor, jpeg_data_tensor = \

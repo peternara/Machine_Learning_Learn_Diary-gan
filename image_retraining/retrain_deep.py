@@ -732,31 +732,40 @@ def add_final_training_ops(class_count, final_tensor_name, bottleneck_tensor):
     with tf.name_scope(layer_name):
         with tf.name_scope('weights'):
             layer_weights_h1 = tf.Variable(tf.truncated_normal(
-                [BOTTLENECK_TENSOR_SIZE, 512], stddev=0.001), name='final_weights_h1')
+                [BOTTLENECK_TENSOR_SIZE, 1024], stddev=0.001), name='final_weights_h1')
 
             l2_loss_h1 = tf.multiply(tf.nn.l2_loss(layer_weights_h1), 4e-3)
             tf.add_to_collection('loss', l2_loss_h1)
 
             layer_weights_h2 = tf.Variable(tf.truncated_normal(
-                [512, class_count], stddev=0.001), name='final_weights_h2')
+                [1024, 512], stddev=0.001), name='final_weights_h2')
 
             l2_loss_h2 = tf.multiply(tf.nn.l2_loss(layer_weights_h2), 4e-3)
+
             tf.add_to_collection('loss', l2_loss_h2)
 
-            variable_summaries(layer_weights_h2)
+            layer_weights_h3 = tf.Variable(tf.truncated_normal(
+                [512, class_count], stddev=0.001), name='final_weights_h3')
+
+            l2_loss_h3 = tf.multiply(tf.nn.l2_loss(layer_weights_h3), 4e-3)
+            tf.add_to_collection('loss', l2_loss_h3)
+
+            variable_summaries(layer_weights_h3)
 
         with tf.name_scope('biases'):
-            layer_biases_h1 = tf.Variable(tf.zeros([512]), name='final_biases_h1')
-            layer_biases_h2 = tf.Variable(tf.zeros([class_count]), name='final_biases_h2')
+            layer_biases_h1 = tf.Variable(tf.zeros([1024]), name='final_biases_h1')
+            layer_biases_h2 = tf.Variable(tf.zeros([512]), name='final_biases_h2')
+            layer_biases_h3 = tf.Variable(tf.zeros([class_count]), name='final_biases_h3')
 
-            variable_summaries(layer_biases_h2)
+            variable_summaries(layer_biases_h3)
 
         with tf.name_scope('Wx_plus_b'):
             h1 = tf.matmul(bottleneck_input, layer_weights_h1) + layer_biases_h1
             h1 = tf.nn.relu(h1)
-            h1 = tf.nn.dropout(h1, keep_prob=keep_prob[0])
+            h2 = tf.matmul(h1, layer_weights_h2) + layer_biases_h2
+            h2 = tf.nn.relu(h2)
 
-            logits = tf.matmul(h1, layer_weights_h2) + layer_biases_h2
+            logits = tf.matmul(h2, layer_weights_h3) + layer_biases_h3
 
             tf.summary.histogram('pre_activations', logits)
 
@@ -961,13 +970,13 @@ if __name__ == '__main__':
     parser.add_argument(
         '--output_graph',
         type=str,
-        default='oss://mlearn/Baidu_JS/output/model/output_graph.pb',
+        default='oss://mlearn/Baidu_JS/output_deep/model/output_graph.pb',
         help='Where to save the trained graph.'
     )
     parser.add_argument(
         '--output_labels',
         type=str,
-        default='oss://mlearn/Baidu_JS/output/model/output_labels.txt',
+        default='oss://mlearn/Baidu_JS/output_deep/model/output_labels.txt',
         help='Where to save the trained graph\'s labels.'
     )
     parser.add_argument(
@@ -1047,7 +1056,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--checkpointDir',
         type=str,
-        default='oss://mlearn/Baidu_JS/output',
+        default='oss://mlearn/Baidu_JS/output_deep',
         help="""\
       Path to classify_image_graph_def.pb,
       imagenet_synset_to_human_label_map.txt, and
@@ -1057,7 +1066,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--bottleneck_dir',
         type=str,
-        default='oss://mlearn/Baidu_JS/output/model',
+        default='oss://mlearn/Baidu_JS/output_deep/model',
         help='Path to cache bottleneck layer values as files.'
     )
     parser.add_argument(
