@@ -732,40 +732,20 @@ def add_final_training_ops(class_count, final_tensor_name, bottleneck_tensor):
     with tf.name_scope(layer_name):
         with tf.name_scope('weights'):
             layer_weights_h1 = tf.Variable(tf.truncated_normal(
-                [BOTTLENECK_TENSOR_SIZE, 1024], stddev=0.001), name='final_weights_h1')
+                [BOTTLENECK_TENSOR_SIZE, class_count], stddev=0.001), name='final_weights_h1')
 
             l2_loss_h1 = tf.multiply(tf.nn.l2_loss(layer_weights_h1), 4e-3)
             tf.add_to_collection('loss', l2_loss_h1)
 
-            layer_weights_h2 = tf.Variable(tf.truncated_normal(
-                [1024, 512], stddev=0.001), name='final_weights_h2')
-
-            l2_loss_h2 = tf.multiply(tf.nn.l2_loss(layer_weights_h2), 4e-3)
-
-            tf.add_to_collection('loss', l2_loss_h2)
-
-            layer_weights_h3 = tf.Variable(tf.truncated_normal(
-                [512, class_count], stddev=0.001), name='final_weights_h3')
-
-            l2_loss_h3 = tf.multiply(tf.nn.l2_loss(layer_weights_h3), 4e-3)
-            tf.add_to_collection('loss', l2_loss_h3)
-
-            variable_summaries(layer_weights_h3)
+            variable_summaries(layer_weights_h1)
 
         with tf.name_scope('biases'):
-            layer_biases_h1 = tf.Variable(tf.zeros([1024]), name='final_biases_h1')
-            layer_biases_h2 = tf.Variable(tf.zeros([512]), name='final_biases_h2')
-            layer_biases_h3 = tf.Variable(tf.zeros([class_count]), name='final_biases_h3')
+            layer_biases_h1 = tf.Variable(tf.zeros([class_count]), name='final_biases_h1')
 
-            variable_summaries(layer_biases_h3)
+            variable_summaries(layer_biases_h1)
 
         with tf.name_scope('Wx_plus_b'):
-            h1 = tf.matmul(bottleneck_input, layer_weights_h1) + layer_biases_h1
-            h1 = tf.nn.relu(h1)
-            h2 = tf.matmul(h1, layer_weights_h2) + layer_biases_h2
-            h2 = tf.nn.relu(h2)
-
-            logits = tf.matmul(h2, layer_weights_h3) + layer_biases_h3
+            logits = tf.matmul(bottleneck_input, layer_weights_h1) + layer_biases_h1
 
             tf.summary.histogram('pre_activations', logits)
 
@@ -782,7 +762,7 @@ def add_final_training_ops(class_count, final_tensor_name, bottleneck_tensor):
     tf.summary.scalar('cross_entropy', cross_entropy_mean)
 
     with tf.name_scope('train'):
-        optimizer = tf.train.AdamOptimizer(FLAGS.learning_rate, beta1=0.5)
+        optimizer = tf.train.MomentumOptimizer(FLAGS.learning_rate, momentum=0.99)
         train_step = optimizer.minimize(cross_entropy_mean)
 
     return (train_step, cross_entropy_mean, bottleneck_input, ground_truth_input,
@@ -988,7 +968,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--how_many_training_steps',
         type=int,
-        default=6000,
+        default=8000,
         help='How many training steps to run before ending.'
     )
     parser.add_argument(
@@ -1088,7 +1068,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--random_crop',
         type=int,
-        default=0.3,
+        default=0.4,
         help="""\
       A percentage determining how much of a margin to randomly crop off the
       training images.\
@@ -1097,7 +1077,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--random_scale',
         type=int,
-        default=0.3,
+        default=0.4,
         help="""\
       A percentage determining how much to randomly scale up the size of the
       training images by.\

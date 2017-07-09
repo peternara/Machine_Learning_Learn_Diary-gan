@@ -9,11 +9,12 @@ flags = tf.app.flags.FLAGS
 with tf.gfile.FastGFile(os.path.join(flags.checkpointDir, 'output_graph.pb'), 'rb') as f:
     grapf_def = tf.GraphDef()
     grapf_def.ParseFromString(f.read())
-    final_result_tensor, jpeg_data_tensor = \
+    final_result_tensor, jpeg_data_tensor, keep_prop = \
         tf.import_graph_def(grapf_def, name='',
                             return_elements=[
                                 'final_result:0',
-                                'DecodeJpeg/contents:0'
+                                'DecodeJpeg/contents:0',
+                                'input/keep_prob:0'
                             ])
 
 sess = tf.Session()
@@ -32,7 +33,8 @@ for key, filename in enumerate(test_image):
     image_id = os.path.basename(filename).split('.')[0]
     image = tf.gfile.FastGFile(filename, 'rb').read()
     predict = sess.run(result, {
-        jpeg_data_tensor: image
+        jpeg_data_tensor: image,
+        keep_prop: [1]
     })
     output_name = "{}\t{}\n".format(label[int(predict[0])], image_id)
     print "step: {}, output_name: {}".format(key, output_name)
