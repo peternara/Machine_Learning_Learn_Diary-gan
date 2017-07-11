@@ -731,32 +731,21 @@ def add_final_training_ops(class_count, final_tensor_name, bottleneck_tensor):
     layer_name = 'final_training_ops'
     with tf.name_scope(layer_name):
         with tf.name_scope('weights'):
-            layer_weights_h1 = tf.Variable(tf.truncated_normal(
-                [BOTTLENECK_TENSOR_SIZE, 512], stddev=0.001), name='final_weights_h1')
+            layer_weights = tf.Variable(tf.truncated_normal(
+                [BOTTLENECK_TENSOR_SIZE, class_count], stddev=0.001), name='final_weights')
 
-            l2_loss_h1 = tf.multiply(tf.nn.l2_loss(layer_weights_h1), 4e-3)
-            tf.add_to_collection('loss', l2_loss_h1)
+            l2_loss = tf.multiply(tf.nn.l2_loss(layer_weights), 4e-3)
+            tf.add_to_collection('loss', l2_loss)
 
-            layer_weights_h2 = tf.Variable(tf.truncated_normal(
-                [512, class_count], stddev=0.001), name='final_weights_h2')
-
-            l2_loss_h2 = tf.multiply(tf.nn.l2_loss(layer_weights_h2), 4e-3)
-            tf.add_to_collection('loss', l2_loss_h2)
-
-            variable_summaries(layer_weights_h2)
+            variable_summaries(layer_weights)
 
         with tf.name_scope('biases'):
-            layer_biases_h1 = tf.Variable(tf.zeros([512]), name='final_biases_h1')
-            layer_biases_h2 = tf.Variable(tf.zeros([class_count]), name='final_biases_h2')
+            layer_biases = tf.Variable(tf.zeros([class_count]), name='final_biases')
 
-            variable_summaries(layer_biases_h2)
+            variable_summaries(layer_biases)
 
         with tf.name_scope('Wx_plus_b'):
-            h1 = tf.matmul(bottleneck_input, layer_weights_h1) + layer_biases_h1
-            h1 = tf.nn.relu(h1)
-            h1 = tf.nn.dropout(h1, keep_prob=keep_prob[0])
-
-            logits = tf.matmul(h1, layer_weights_h2) + layer_biases_h2
+            logits = tf.matmul(bottleneck_input, layer_weights) + layer_biases
 
             tf.summary.histogram('pre_activations', logits)
 
@@ -773,7 +762,7 @@ def add_final_training_ops(class_count, final_tensor_name, bottleneck_tensor):
     tf.summary.scalar('cross_entropy', cross_entropy_mean)
 
     with tf.name_scope('train'):
-        optimizer = tf.train.MomentumOptimizer(FLAGS.learning_rate, momentum=0.9)
+        optimizer = tf.train.GradientDescentOptimizer(FLAGS.learning_rate)
         train_step = optimizer.minimize(cross_entropy_mean)
 
     return (train_step, cross_entropy_mean, bottleneck_input, ground_truth_input,
@@ -991,13 +980,13 @@ if __name__ == '__main__':
     parser.add_argument(
         '--testing_percentage',
         type=int,
-        default=10,
+        default=1,
         help='What percentage of images to use as a test set.'
     )
     parser.add_argument(
         '--validation_percentage',
         type=int,
-        default=10,
+        default=1,
         help='What percentage of images to use as a validation set.'
     )
     parser.add_argument(

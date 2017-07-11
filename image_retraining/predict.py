@@ -1,5 +1,7 @@
 # coding: utf8
 import tensorflow as tf
+import tensorflow.contrib.slim as slim
+
 import os
 
 tf.app.flags.DEFINE_string('buckets', './test', '图片文件夹')
