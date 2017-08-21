@@ -179,9 +179,9 @@ def make_gif(images, fname, duration=2, true_image=False):
         else:
             return ((x + 1) / 2 * 255).astype(np.uint8)
 
-    # clip = mpy.VideoClip(make_frame, duration=duration)
-    # clip.write_gif(fname, fps=len(images) / duration)
-    # clip.write_gif(fname, fps=2)
+            # clip = mpy.VideoClip(make_frame, duration=duration)
+            # clip.write_gif(fname, fps=len(images) / duration)
+            # clip.write_gif(fname, fps=2)
 
 
 def visualize(sess, dcgan, config, option):
