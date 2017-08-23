@@ -35,7 +35,8 @@ class DCGAN(object):
                  dataset_name='default',
                  input_fname_pattern='*.jpg',
                  checkpoint_dir=None,
-                 sample_dir=None):
+                 sample_dir=None,
+                 config=None):
         """
 
         Args:
@@ -89,6 +90,9 @@ class DCGAN(object):
         self.checkpoint_dir = checkpoint_dir
 
         self.data = tf.gfile.Glob(os.path.join(FLAGS.buckets, self.input_fname_pattern))
+        self.inputs = self.reader(files=self.data, batch_size=config.batch_size, resize_height=self.output_height,
+                                  resize_width=self.output_width)
+
         self.c_dim = 3
 
         self.grayscale = (self.c_dim == 1)
@@ -103,9 +107,6 @@ class DCGAN(object):
             image_dims = [self.output_height, self.output_width, self.c_dim]
         else:
             image_dims = [self.input_height, self.input_width, self.c_dim]
-
-        self.inputs = tf.placeholder(
-            tf.float32, [self.batch_size] + image_dims, name='real_images')
 
         inputs = self.inputs
 
@@ -157,6 +158,20 @@ class DCGAN(object):
 
         self.saver = tf.train.Saver()
 
+    def reader(self, files, resize_height, resize_width, batch_size):
+        reader = tf.WholeFileReader()
+        file_queue = tf.train.string_input_producer(files)
+        file_name, file_content = reader.read(file_queue)
+        with tf.name_scope('image_pretreatment'):
+            image = tf.image.decode_jpeg(file_content, channels=3)
+            image = tf.image.resize_images(image, [resize_height, resize_width])
+            image = tf.image.random_flip_left_right(image)
+            image = tf.image.random_brightness(image, max_delta=73)
+            image = tf.image.random_contrast(image, lower=0.8, upper=1.2)
+        batch = tf.train.shuffle_batch([image], batch_size=batch_size, capacity=1000 + 3 * batch_size, num_threads=4,
+                                       min_after_dequeue=1000)
+        return batch
+
     def train(self, config):
         d_optim = tf.train.AdamOptimizer(config.learning_rate, beta1=config.beta1) \
             .minimize(self.d_loss, var_list=self.d_vars)
@@ -182,35 +197,19 @@ class DCGAN(object):
         else:
             print(" [!] Load failed...")
 
+        tf.train.start_queue_runners(sess=self.sess)
+
         for epoch in xrange(config.epoch):
 
-            self.data = glob(os.path.join(
-                FLAGS.buckets, self.input_fname_pattern))
             batch_idxs = min(len(self.data), config.train_size) // config.batch_size
 
             for idx in xrange(0, batch_idxs):
 
-                batch_files = self.data[idx * config.batch_size:(idx + 1) * config.batch_size]
-                print batch_files
-                batch = [
-                    get_image(batch_file,
-                              input_height=self.input_height,
-                              input_width=self.input_width,
-                              resize_height=self.output_height,
-                              resize_width=self.output_width,
-                              crop=self.crop,
-                              grayscale=self.grayscale) for batch_file in batch_files]
-                if self.grayscale:
-                    batch_images = np.array(batch).astype(np.float32)[:, :, :, None]
-                else:
-                    batch_images = np.array(batch).astype(np.float32)
-
-                batch_z = np.random.uniform(-1, 1, [config.batch_size, self.z_dim]) \
-                    .astype(np.float32)
+                batch_z = np.random.uniform(-1, 1, [config.batch_size, self.z_dim]).astype(np.float32)
 
                 # Update D network
                 _, summary_str = self.sess.run([d_optim, self.d_sum],
-                                               feed_dict={self.inputs: batch_images, self.z: batch_z})
+                                               feed_dict={self.z: batch_z})
                 self.writer.add_summary(summary_str, counter)
 
                 # Update G network
@@ -224,7 +223,7 @@ class DCGAN(object):
                 self.writer.add_summary(summary_str, counter)
 
                 errD_fake = self.d_loss_fake.eval({self.z: batch_z})
-                errD_real = self.d_loss_real.eval({self.inputs: batch_images})
+                errD_real = self.d_loss_real.eval()
                 errG = self.g_loss.eval({self.z: batch_z})
 
                 counter += 1
@@ -238,7 +237,6 @@ class DCGAN(object):
                             [self.sampler, self.d_loss, self.g_loss],
                             feed_dict={
                                 self.z: sample_z,
-                                self.inputs: sample_inputs,
                                 self.y: sample_labels,
                             }
                         )
@@ -250,8 +248,7 @@ class DCGAN(object):
                             samples, d_loss, g_loss = self.sess.run(
                                 [self.sampler, self.d_loss, self.g_loss],
                                 feed_dict={
-                                    self.z: sample_z,
-                                    self.inputs: sample_inputs,
+                                    self.z: sample_z
                                 },
                             )
                             save_images(samples, image_manifold_size(samples.shape[0]),
@@ -425,6 +422,7 @@ class DCGAN(object):
         import re
         print(" [*] Reading checkpoints...")
         checkpoint_dir = os.path.join(checkpoint_dir, self.model_dir)
+        print checkpoint_dir
         ckpt = tf.train.get_checkpoint_state(checkpoint_dir)
         if ckpt and ckpt.model_checkpoint_path:
             ckpt_name = os.path.basename(ckpt.model_checkpoint_path)

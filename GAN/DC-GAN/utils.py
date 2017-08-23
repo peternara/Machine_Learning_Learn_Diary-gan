@@ -186,6 +186,8 @@ def make_gif(images, fname, duration=2, true_image=False):
 
 def visualize(sess, dcgan, config, option):
     image_frame_dim = int(math.ceil(config.batch_size ** .5))
+    if not tf.gfile.Exists('./samples'):
+        tf.gfile.MakeDirs('./samples')
     if option == 0:
         z_sample = np.random.uniform(-1, 1, size=(config.batch_size, dcgan.z_dim))
         samples = sess.run(dcgan.sampler, feed_dict={dcgan.z: z_sample})

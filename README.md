@@ -84,22 +84,22 @@ Trying to understand
 3. [X] ac-gan( basic-usage )
 4. [X] ac-gan with cnn
 
-[ ] Style transfer
+[x] Style transfer
 ---
 
 1. [X] Understanding transfer theory
 2. [X] Basic usage
-3. [ ] Understanding fast style transfer theory
+3. [x] Understanding fast style transfer theory
 4. [X] Fast Style Transfer usage
 
-[ ] Baidu classify competition
+[x] Baidu classify competition
 ---
 
 1. [X] train_sets download -> me
 2. [X] coding -> me
 3. [X] make test_sets -> me and teammate
 4. [X] train
-5. [] optimize
+5. [x] optimize
 
 [x] Cloth Generator with GC-GAN
 ---
@@ -107,5 +107,8 @@ Failed because of output image is too big and sample sets is not enough
 
 Optimize it in 2 days
 
-[X] Aliyun machine learning platform script
-1. [X] image resizer
+
+[x] stock LSTM prediction
+use LSTM neural network to predict stock data
+
+[X] VAE

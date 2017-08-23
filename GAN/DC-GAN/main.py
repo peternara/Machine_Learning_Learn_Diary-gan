@@ -20,11 +20,11 @@ flags.DEFINE_integer("output_width", None, "图片输出宽度, 如果空, 和�
 flags.DEFINE_string("input_fname_pattern", "*.jpg", "图片名")
 flags.DEFINE_string("checkpointDir", "checkpoint_dir/", "模型保存路径")
 flags.DEFINE_string("summaryDir", "logs/", "TensorBoard路径")
-flags.DEFINE_string("buckets", "data/", "图片储存路径")
-flags.DEFINE_string("dataset", "sample_dir", "数据集名称")
-flags.DEFINE_boolean("train", True, "是否是训练")
+flags.DEFINE_string("buckets", "data/gt_db", "数据源路径")
+flags.DEFINE_string("dataset", "gt_db", "数据集名称")
+flags.DEFINE_boolean("train", False, "是否是训练")
 flags.DEFINE_boolean("crop", False, "是否裁剪, 如果训练的时候, 建议为True, 如果是测试的时候, 建议为False")
-flags.DEFINE_boolean("visualize", False, "是否进行可视化")
+flags.DEFINE_boolean("visualize", True, "是否进行可视化")
 FLAGS = flags.FLAGS
 
 
@@ -36,10 +36,10 @@ def main(_):
     if FLAGS.output_width is None:
         FLAGS.output_width = FLAGS.output_height
 
-    if not os.path.exists(FLAGS.checkpointDir):
-        os.makedirs(FLAGS.checkpointDir)
-    if not os.path.exists(FLAGS.buckets):
-        os.makedirs(FLAGS.buckets)
+    if not tf.gfile.Exists(FLAGS.checkpointDir):
+        tf.gfile.MakeDirs(FLAGS.checkpointDir)
+    if not tf.gfile.Exists(FLAGS.buckets):
+        tf.gfile.MakeDirs(FLAGS.buckets)
 
     with tf.Session() as sess:
 
@@ -51,11 +51,12 @@ def main(_):
             output_height=FLAGS.output_height,
             batch_size=FLAGS.batch_size,
             sample_num=FLAGS.batch_size,
-            dataset_name='sample_dir',
+            dataset_name=FLAGS.dataset,
             input_fname_pattern=FLAGS.input_fname_pattern,
             crop=FLAGS.crop,
             checkpoint_dir=FLAGS.checkpointDir,
-            sample_dir=FLAGS.buckets)
+            sample_dir=FLAGS.buckets,
+            config=FLAGS)
 
         show_all_variables()
 
