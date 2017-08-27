@@ -208,7 +208,7 @@ def visualize(sess, dcgan, config, option):
         values = np.arange(0, 1, 1. / config.batch_size)
         for idx in [random.randint(0, 99) for _ in xrange(100)]:
             print(" [*] %d" % idx)
-            z = np.random.uniform(-0.2, 0.2, size=(dcgan.z_dim))
+            z = np.random.uniform(-1, 1, size=(dcgan.z_dim))
             z_sample = np.tile(z, (config.batch_size, 1))
             # z_sample = np.zeros([config.batch_size, dcgan.z_dim])
             for kdx, z in enumerate(z_sample):

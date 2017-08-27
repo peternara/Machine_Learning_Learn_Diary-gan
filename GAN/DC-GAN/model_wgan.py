@@ -111,39 +111,27 @@ class DCGAN(object):
             tf.float32, [None, self.z_dim], name='z')
         self.z_sum = histogram_summary("z", self.z)
 
-        if self.y_dim:
-            self.G = self.generator(self.z, self.y)
-            self.D, self.D_logits = \
-                self.discriminator(inputs, self.y, reuse=False)
+        self.z_sum = histogram_summary("z", self.z)
 
-            self.sampler = self.sampler(self.z, self.y)
-            self.D_, self.D_logits_ = \
-                self.discriminator(self.G, self.y, reuse=True)
-        else:
-            self.G = self.generator(self.z)
-            self.D, self.D_logits = self.discriminator(inputs)
+        self.G = self.generator(self.z)
+        self.D, self.D_logits = self.discriminator(inputs)
 
-            self.sampler = self.sampler(self.z)
-            self.D_, self.D_logits_ = self.discriminator(self.G, reuse=True)
+        self.sampler = self.sampler(self.z)  # 用于可视化
+
+        self.D_, self.D_logits_ = self.discriminator(self.G, reuse=True)
 
         self.d_sum = histogram_summary("d", self.D)
         self.d__sum = histogram_summary("d_", self.D_)
         self.G_sum = image_summary("G", self.G)
 
-        def sigmoid_cross_entropy_with_logits(x, y):
-            return tf.nn.sigmoid_cross_entropy_with_logits(logits=x, labels=y)
+        z = tf.random_uniform([self.config.batch_size, self.config.output_height, self.config.output_height, 1],
+                              minval=0., maxval=1.)
+        X_inter = z * self.z + (1. - z) * self.G
+        grad = tf.gradients(self.D(X_inter), [X_inter])[0]
+        self.grad_norm = tf.sqrt(tf.reduce_sum((grad) ** 2, axis=1))  # 用于W-gan求G损失
 
-        self.d_loss_real = tf.reduce_mean(
-            sigmoid_cross_entropy_with_logits(self.D_logits, tf.ones_like(self.D)))
-        self.d_loss_fake = tf.reduce_mean(
-            sigmoid_cross_entropy_with_logits(self.D_logits_, tf.zeros_like(self.D_)))
-        self.g_loss = tf.reduce_mean(
-            sigmoid_cross_entropy_with_logits(self.D_logits_, tf.ones_like(self.D_)))
-
-        self.d_loss_real_sum = scalar_summary("d_loss_real", self.d_loss_real)
-        self.d_loss_fake_sum = scalar_summary("d_loss_fake", self.d_loss_fake)
-
-        self.d_loss = self.d_loss_real + self.d_loss_fake
+        self.d_loss = tf.reduce_mean(self.D_logits_) - tf.reduce_mean(self.D_logits) + self.grad_norm
+        self.g_loss = -tf.reduce_mean(self.D_logits_)
 
         self.g_loss_sum = scalar_summary("g_loss", self.g_loss)
         self.d_loss_sum = scalar_summary("d_loss", self.d_loss)
@@ -183,8 +171,9 @@ class DCGAN(object):
             [self.z_sum, self.d_sum, self.d_loss_real_sum, self.d_loss_sum])
         self.writer = SummaryWriter(FLAGS.summaryDir, self.sess.graph)
 
-        counter = 1
+        sample_z = np.random.uniform(-1, 1, size=(self.sample_num, self.z_dim))
 
+        counter = 1
         start_time = time.time()
         could_load, checkpoint_counter = self.load(self.checkpoint_dir)
         if could_load:
@@ -193,7 +182,8 @@ class DCGAN(object):
         else:
             print(" [!] Load failed...")
 
-        tf.train.start_queue_runners(sess=self.sess, coord=self.coord)
+        threads = tf.train.start_queue_runners(sess=self.sess, coord=self.coord)
+
         for epoch in xrange(self.config.epoch):
 
             batch_idxs = min(len(self.data), self.config.train_size) // self.config.batch_size
@@ -261,62 +251,36 @@ class DCGAN(object):
 
     def generator(self, z, y=None):
         with tf.variable_scope("generator") as scope:
-            if not self.y_dim:
-                s_h, s_w = self.output_height, self.output_width
-                s_h2, s_w2 = conv_out_size_same(s_h, 2), conv_out_size_same(s_w, 2)
-                s_h4, s_w4 = conv_out_size_same(s_h2, 2), conv_out_size_same(s_w2, 2)
-                s_h8, s_w8 = conv_out_size_same(s_h4, 2), conv_out_size_same(s_w4, 2)
-                s_h16, s_w16 = conv_out_size_same(s_h8, 2), conv_out_size_same(s_w8, 2)
+            s_h, s_w = self.output_height, self.output_width
+            s_h2, s_w2 = conv_out_size_same(s_h, 2), conv_out_size_same(s_w, 2)
+            s_h4, s_w4 = conv_out_size_same(s_h2, 2), conv_out_size_same(s_w2, 2)
+            s_h8, s_w8 = conv_out_size_same(s_h4, 2), conv_out_size_same(s_w4, 2)
+            s_h16, s_w16 = conv_out_size_same(s_h8, 2), conv_out_size_same(s_w8, 2)
 
-                # project `z` and reshape
-                self.z_, self.h0_w, self.h0_b = linear(
-                    z, self.gf_dim * 8 * s_h16 * s_w16, 'g_h0_lin', with_w=True)
+            # project `z` and reshape
+            self.z_, self.h0_w, self.h0_b = linear(
+                z, self.gf_dim * 8 * s_h16 * s_w16, 'g_h0_lin', with_w=True)
 
-                self.h0 = tf.reshape(
-                    self.z_, [-1, s_h16, s_w16, self.gf_dim * 8])
-                h0 = tf.nn.relu(self.g_bn0(self.h0))
+            self.h0 = tf.reshape(
+                self.z_, [-1, s_h16, s_w16, self.gf_dim * 8])
+            h0 = tf.nn.relu(self.g_bn0(self.h0))
 
-                self.h1, self.h1_w, self.h1_b = deconv2d(
-                    h0, [self.batch_size, s_h8, s_w8, self.gf_dim * 4], name='g_h1', with_w=True)
-                h1 = tf.nn.relu(self.g_bn1(self.h1))
+            self.h1, self.h1_w, self.h1_b = deconv2d(
+                h0, [self.batch_size, s_h8, s_w8, self.gf_dim * 4], name='g_h1', with_w=True)
+            h1 = tf.nn.relu(self.g_bn1(self.h1))
 
-                h2, self.h2_w, self.h2_b = deconv2d(
-                    h1, [self.batch_size, s_h4, s_w4, self.gf_dim * 2], name='g_h2', with_w=True)
-                h2 = tf.nn.relu(self.g_bn2(h2))
+            h2, self.h2_w, self.h2_b = deconv2d(
+                h1, [self.batch_size, s_h4, s_w4, self.gf_dim * 2], name='g_h2', with_w=True)
+            h2 = tf.nn.relu(self.g_bn2(h2))
 
-                h3, self.h3_w, self.h3_b = deconv2d(
-                    h2, [self.batch_size, s_h2, s_w2, self.gf_dim * 1], name='g_h3', with_w=True)
-                h3 = tf.nn.relu(self.g_bn3(h3))
+            h3, self.h3_w, self.h3_b = deconv2d(
+                h2, [self.batch_size, s_h2, s_w2, self.gf_dim * 1], name='g_h3', with_w=True)
+            h3 = tf.nn.relu(self.g_bn3(h3))
 
-                h4, self.h4_w, self.h4_b = deconv2d(
-                    h3, [self.batch_size, s_h, s_w, self.c_dim], name='g_h4', with_w=True)
+            h4, self.h4_w, self.h4_b = deconv2d(
+                h3, [self.batch_size, s_h, s_w, self.c_dim], name='g_h4', with_w=True)
 
-                return tf.nn.tanh(h4)
-            else:
-                s_h, s_w = self.output_height, self.output_width
-                s_h2, s_h4 = int(s_h / 2), int(s_h / 4)
-                s_w2, s_w4 = int(s_w / 2), int(s_w / 4)
-
-                # yb = tf.expand_dims(tf.expand_dims(y, 1),2)
-                yb = tf.reshape(y, [self.batch_size, 1, 1, self.y_dim])
-                z = concat([z, y], 1)
-
-                h0 = tf.nn.relu(
-                    self.g_bn0(linear(z, self.gfc_dim, 'g_h0_lin')))
-                h0 = concat([h0, y], 1)
-
-                h1 = tf.nn.relu(self.g_bn1(
-                    linear(h0, self.gf_dim * 2 * s_h4 * s_w4, 'g_h1_lin')))
-                h1 = tf.reshape(h1, [self.batch_size, s_h4, s_w4, self.gf_dim * 2])
-
-                h1 = conv_cond_concat(h1, yb)
-
-                h2 = tf.nn.relu(self.g_bn2(deconv2d(h1,
-                                                    [self.batch_size, s_h2, s_w2, self.gf_dim * 2], name='g_h2')))
-                h2 = conv_cond_concat(h2, yb)
-
-                return tf.nn.sigmoid(
-                    deconv2d(h2, [self.batch_size, s_h, s_w, self.c_dim], name='g_h3'))
+            return tf.nn.sigmoid(h4)
 
     def sampler(self, z, y=None):
         with tf.variable_scope("generator") as scope:
@@ -346,7 +310,7 @@ class DCGAN(object):
 
                 h4 = deconv2d(h3, [self.batch_size, s_h, s_w, self.c_dim], name='g_h4')
 
-                return tf.nn.tanh(h4)
+                return tf.nn.sigmoid(h4)
             else:
                 s_h, s_w = self.output_height, self.output_width
                 s_h2, s_h4 = int(s_h / 2), int(s_h / 4)
