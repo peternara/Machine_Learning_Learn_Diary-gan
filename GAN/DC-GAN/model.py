@@ -27,8 +27,8 @@ class DCGAN(object):
                  output_width=64,
                  y_dim=None,
                  z_dim=100,
-                 gf_dim=64,
-                 df_dim=64,
+                 gf_dim=256,
+                 df_dim=256,
                  gfc_dim=1024,
                  dfc_dim=1024,
                  c_dim=3,
@@ -163,8 +163,8 @@ class DCGAN(object):
             image = tf.image.decode_jpeg(file_content, channels=3, try_recover_truncated=True)
             image = tf.image.resize_images(image, [resize_height, resize_width])
             image = tf.image.random_flip_left_right(image)
-            image = tf.image.random_brightness(image, max_delta=73)
-            image = tf.image.random_contrast(image, lower=0.8, upper=1.2)
+            image = tf.image.random_brightness(image, max_delta=63)
+            image = tf.image.random_contrast(image, lower=0.2, upper=1.8)
         batch = tf.train.shuffle_batch([image], batch_size=batch_size, capacity=1000 + 3 * batch_size, num_threads=64,
                                        min_after_dequeue=1000)
         return batch
@@ -186,6 +186,7 @@ class DCGAN(object):
         counter = 1
 
         start_time = time.time()
+
         could_load, checkpoint_counter = self.load(self.checkpoint_dir)
         if could_load:
             counter = checkpoint_counter
@@ -216,14 +217,15 @@ class DCGAN(object):
                                                feed_dict={self.z: batch_z})
                 self.writer.add_summary(summary_str, counter)
 
-                errD_fake = self.d_loss_fake.eval({self.z: batch_z})
-                errD_real = self.d_loss_real.eval()
-                errG = self.g_loss.eval({self.z: batch_z})
+                # errD_fake = self.d_loss_fake.eval({self.z: batch_z})
+                # errD_real = self.d_loss_real.eval()
+                # errG = self.g_loss.eval({self.z: batch_z})
+                #
 
                 counter += 1
-                print("Epoch: [%2d] [%4d/%4d] time: %4.4f, d_loss: %.8f, g_loss: %.8f" \
-                      % (epoch, idx, batch_idxs,
-                         time.time() - start_time, errD_fake + errD_real, errG))
+                # print("Epoch: [%2d] [%4d/%4d] time: %4.4f, d_loss: %.8f, g_loss: %.8f" \
+                #       % (epoch, idx, batch_idxs,
+                #          time.time() - start_time, errD_fake + errD_real, errG))
 
                 if np.mod(counter, 500) == 2:
                     self.save(self.config.checkpointDir, counter)
@@ -372,9 +374,9 @@ class DCGAN(object):
 
     @property
     def model_dir(self):
-        return "{}_{}_{}_{}".format(
+        return "{}_{}_{}_{}_lr_{}".format(
             self.dataset_name, self.batch_size,
-            self.output_height, self.output_width)
+            self.output_height, self.output_width, self.config.learning_rate)
 
     def save(self, checkpoint_dir, step):
         model_name = "DCGAN.model"

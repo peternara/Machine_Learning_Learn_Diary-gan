@@ -5,7 +5,7 @@ import os
 import time
 from glob import glob
 
-from ops import *
+from ops_wgan import *
 from utils import *
 
 FLAGS = tf.flags.FLAGS
@@ -114,6 +114,7 @@ class DCGAN(object):
         self.z_sum = histogram_summary("z", self.z)
 
         self.G = self.generator(self.z)
+
         self.D, self.D_logits = self.discriminator(inputs)
 
         self.sampler = self.sampler(self.z)  # 用于可视化
@@ -124,13 +125,15 @@ class DCGAN(object):
         self.d__sum = histogram_summary("d_", self.D_)
         self.G_sum = image_summary("G", self.G)
 
-        z = tf.random_uniform([self.config.batch_size, self.config.output_height, self.config.output_height, 1],
-                              minval=0., maxval=1.)
-        X_inter = z * self.z + (1. - z) * self.G
-        grad = tf.gradients(self.D(X_inter), [X_inter])[0]
-        self.grad_norm = tf.sqrt(tf.reduce_sum((grad) ** 2, axis=1))  # 用于W-gan求G损失
+        # 用于W-gan原理求G损失
+        eps = tf.random_uniform([self.config.batch_size, self.config.output_height, self.config.output_height, 1],
+                                minval=0., maxval=1.)
+        X_inter = eps * self.inputs + (1. - eps) * self.G
+        grad = tf.gradients(self.discriminator(X_inter, reuse=True)[1], [X_inter])[0]
+        grad_norm = tf.sqrt(tf.reduce_sum(grad ** 2, axis=1))
+        grad_pen = 10 * tf.reduce_mean((grad_norm - 1) ** 2)
 
-        self.d_loss = tf.reduce_mean(self.D_logits_) - tf.reduce_mean(self.D_logits) + self.grad_norm
+        self.d_loss = tf.reduce_mean(self.D_logits_) - tf.reduce_mean(self.D_logits) + grad_pen
         self.g_loss = -tf.reduce_mean(self.D_logits_)
 
         self.g_loss_sum = scalar_summary("g_loss", self.g_loss)
@@ -151,8 +154,8 @@ class DCGAN(object):
             image = tf.image.decode_jpeg(file_content, channels=3, try_recover_truncated=True)
             image = tf.image.resize_images(image, [resize_height, resize_width])
             image = tf.image.random_flip_left_right(image)
-            image = tf.image.random_brightness(image, max_delta=73)
-            image = tf.image.random_contrast(image, lower=0.8, upper=1.2)
+            image = tf.image.random_brightness(image, max_delta=63)
+            image = tf.image.random_contrast(image, lower=0.2, upper=1.8)
         batch = tf.train.shuffle_batch([image], batch_size=batch_size, capacity=1000 + 3 * batch_size, num_threads=64,
                                        min_after_dequeue=1000)
         return batch
@@ -166,15 +169,15 @@ class DCGAN(object):
         tf.global_variables_initializer().run()
 
         self.g_sum = merge_summary([self.z_sum, self.d__sum,
-                                    self.G_sum, self.d_loss_fake_sum, self.g_loss_sum])
+                                    self.G_sum, self.g_loss_sum])
         self.d_sum = merge_summary(
-            [self.z_sum, self.d_sum, self.d_loss_real_sum, self.d_loss_sum])
+            [self.z_sum, self.d_sum, self.d_loss_sum])
         self.writer = SummaryWriter(FLAGS.summaryDir, self.sess.graph)
 
-        sample_z = np.random.uniform(-1, 1, size=(self.sample_num, self.z_dim))
-
         counter = 1
+
         start_time = time.time()
+
         could_load, checkpoint_counter = self.load(self.checkpoint_dir)
         if could_load:
             counter = checkpoint_counter
@@ -182,7 +185,7 @@ class DCGAN(object):
         else:
             print(" [!] Load failed...")
 
-        threads = tf.train.start_queue_runners(sess=self.sess, coord=self.coord)
+        tf.train.start_queue_runners(sess=self.sess, coord=self.coord)
 
         for epoch in xrange(self.config.epoch):
 
@@ -201,19 +204,13 @@ class DCGAN(object):
                                                feed_dict={self.z: batch_z})
                 self.writer.add_summary(summary_str, counter)
 
-                # Run g_optim twice to make sure that d_loss does not go to zero (different from paper)
-                _, summary_str = self.sess.run([g_optim, self.g_sum],
-                                               feed_dict={self.z: batch_z})
-                self.writer.add_summary(summary_str, counter)
-
-                errD_fake = self.d_loss_fake.eval({self.z: batch_z})
-                errD_real = self.d_loss_real.eval()
-                errG = self.g_loss.eval({self.z: batch_z})
-
                 counter += 1
-                print("Epoch: [%2d] [%4d/%4d] time: %4.4f, d_loss: %.8f, g_loss: %.8f" \
-                      % (epoch, idx, batch_idxs,
-                         time.time() - start_time, errD_fake + errD_real, errG))
+                print("Epoch: [%2d] [%4d/%4d] time: %4.4f, d_loss: %.8f, g_loss: %.8f" % (epoch, idx, batch_idxs,
+                                                                                          time.time() - start_time,
+                                                                                          self.d_loss.eval(
+                                                                                              {self.z: batch_z}),
+                                                                                          self.g_loss.eval(
+                                                                                              {self.z: batch_z})))
 
                 if np.mod(counter, 500) == 2:
                     self.save(self.config.checkpointDir, counter)
@@ -246,7 +243,6 @@ class DCGAN(object):
                 h2 = concat([h2, y], 1)
 
                 h3 = linear(h2, 1, 'd_h3_lin')
-
                 return tf.nn.sigmoid(h3), h3
 
     def generator(self, z, y=None):
@@ -336,9 +332,9 @@ class DCGAN(object):
 
     @property
     def model_dir(self):
-        return "{}_{}_{}_{}".format(
+        return "{}_{}_{}_{}_lr_{}".format(
             self.dataset_name, self.batch_size,
-            self.output_height, self.output_width)
+            self.output_height, self.output_width, self.config.learning_rate)
 
     def save(self, checkpoint_dir, step):
         model_name = "DCGAN.model"

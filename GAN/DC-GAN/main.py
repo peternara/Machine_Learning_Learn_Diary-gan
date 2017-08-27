@@ -4,17 +4,17 @@ import os
 import numpy as np
 import tensorflow as tf
 
-from model import DCGAN
+from model_wgan import DCGAN
 from utils import pp, show_all_variables, visualize
 import scipy.misc as plt
 
 flags = tf.app.flags
 flags.DEFINE_integer("epoch", 100, "训练次数")
-flags.DEFINE_float("learning_rate", 0.0003, "学习速率")
+flags.DEFINE_float("learning_rate", 0.0001, "学习速率")
 flags.DEFINE_float("beta1", 0.5, "Adam 动量")
 flags.DEFINE_integer("train_size", np.inf, "每个epoch的训练的次数")
-flags.DEFINE_integer("batch_size", 32, "批大小")
-flags.DEFINE_integer("input_height", 128, "图片输入高度")
+flags.DEFINE_integer("batch_size", 5, "批大小")
+flags.DEFINE_integer("input_height", 256, "图片输入高度")
 flags.DEFINE_integer("input_width", None, "图片输入宽度, 如果空, 和高度一致")
 flags.DEFINE_integer("output_height", 128, "输出图片高度")
 flags.DEFINE_integer("output_width", None, "图片输出宽度, 如果空, 和高度一致")
@@ -44,6 +44,7 @@ def main(_):
     # 针对PAI IO 优化:
     # 把OSS文件拷贝到运行时目录
     # 如果在本地运行请跳过这一步
+
     # if not tf.gfile.Exists('./cope_data'):
     #     tf.gfile.MakeDirs('./cope_data')
     # for file_path in tf.gfile.Glob(os.path.join(FLAGS.buckets, '*')):
