@@ -4,16 +4,16 @@ import os
 import numpy as np
 import tensorflow as tf
 
-from model_wgan import DCGAN
+from model import DCGAN
 from utils import pp, show_all_variables, visualize
 import scipy.misc as plt
 
 flags = tf.app.flags
 flags.DEFINE_integer("epoch", 100, "训练次数")
-flags.DEFINE_float("learning_rate", 0.0001, "学习速率")
+flags.DEFINE_float("learning_rate", 0.003, "学习速率")
 flags.DEFINE_float("beta1", 0.5, "Adam 动量")
 flags.DEFINE_integer("train_size", np.inf, "每个epoch的训练的次数")
-flags.DEFINE_integer("batch_size", 5, "批大小")
+flags.DEFINE_integer("batch_size", 64, "批大小")
 flags.DEFINE_integer("input_height", 256, "图片输入高度")
 flags.DEFINE_integer("input_width", None, "图片输入宽度, 如果空, 和高度一致")
 flags.DEFINE_integer("output_height", 128, "输出图片高度")
@@ -23,7 +23,7 @@ flags.DEFINE_string("checkpointDir", "checkpoint_dir/", "模型保存路径")
 flags.DEFINE_string("summaryDir", "logs/", "TensorBoard路径")
 flags.DEFINE_string("buckets", "data/cat", "数据源路径")
 flags.DEFINE_string("dataset", "cat", "数据集名称")
-flags.DEFINE_boolean("train", True, "是否是训练, 否则将进行可视化")
+flags.DEFINE_boolean("train", False, "是否是训练, 否则将进行可视化")
 FLAGS = flags.FLAGS
 
 

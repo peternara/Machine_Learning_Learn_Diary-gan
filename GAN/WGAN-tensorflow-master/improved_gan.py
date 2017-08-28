@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import os
 
-mb_size = 32
+mb_size = 5
 X_dim = 784
 z_dim = 10
 h_dim = 128
@@ -85,11 +85,6 @@ X_inter = eps * X + (1. - eps) * G_sample
 grad = tf.gradients(D(X_inter), [X_inter])[0]
 grad_norm = tf.sqrt(tf.reduce_sum(grad ** 2, axis=1))
 grad_pen = lam * tf.reduce_mean((grad_norm - 1) ** 2)
-
-print grad
-print D_real
-print D_fake
-exit()
 
 D_loss = tf.reduce_mean(D_fake) - tf.reduce_mean(D_real) + grad_pen
 G_loss = -tf.reduce_mean(D_fake)
