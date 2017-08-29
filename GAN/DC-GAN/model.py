@@ -154,7 +154,7 @@ class DCGAN(object):
                                     self.G_sum, self.d_loss_fake_sum, self.g_loss_sum])
         self.d_sum = merge_summary(
             [self.z_sum, self.d_sum, self.d_loss_real_sum, self.d_loss_sum])
-        self.writer = SummaryWriter("./logs", self.sess.graph)
+        self.writer = SummaryWriter(config.summaryDir, self.sess.graph)
 
         sample_z = np.random.uniform(-1, 1, size=(self.sample_num, self.z_dim))
 
@@ -396,43 +396,6 @@ class DCGAN(object):
 
                 return tf.nn.sigmoid(deconv2d(h2, [self.batch_size, s_h, s_w, self.c_dim], name='g_h3'))
 
-    def load_mnist(self):
-        data_dir = os.path.join("./data", self.dataset_name)
-
-        fd = open(os.path.join(data_dir, 'train-images-idx3-ubyte'))
-        loaded = np.fromfile(file=fd, dtype=np.uint8)
-        trX = loaded[16:].reshape((60000, 28, 28, 1)).astype(np.float)
-
-        fd = open(os.path.join(data_dir, 'train-labels-idx1-ubyte'))
-        loaded = np.fromfile(file=fd, dtype=np.uint8)
-        trY = loaded[8:].reshape((60000)).astype(np.float)
-
-        fd = open(os.path.join(data_dir, 't10k-images-idx3-ubyte'))
-        loaded = np.fromfile(file=fd, dtype=np.uint8)
-        teX = loaded[16:].reshape((10000, 28, 28, 1)).astype(np.float)
-
-        fd = open(os.path.join(data_dir, 't10k-labels-idx1-ubyte'))
-        loaded = np.fromfile(file=fd, dtype=np.uint8)
-        teY = loaded[8:].reshape((10000)).astype(np.float)
-
-        trY = np.asarray(trY)
-        teY = np.asarray(teY)
-
-        X = np.concatenate((trX, teX), axis=0)
-        y = np.concatenate((trY, teY), axis=0).astype(np.int)
-
-        seed = 547
-        np.random.seed(seed)
-        np.random.shuffle(X)
-        np.random.seed(seed)
-        np.random.shuffle(y)
-
-        y_vec = np.zeros((len(y), self.y_dim), dtype=np.float)
-        for i, label in enumerate(y):
-            y_vec[i, y[i]] = 1.0
-
-        return X / 255., y_vec
-
     @property
     def model_dir(self):
         return "{}_{}_{}_{}".format(
@@ -442,9 +405,6 @@ class DCGAN(object):
     def save(self, checkpointDir, step):
         model_name = "DCGAN.model"
         checkpointDir = os.path.join(checkpointDir, self.model_dir)
-
-        if not os.path.exists(checkpointDir):
-            os.makedirs(checkpointDir)
 
         self.saver.save(self.sess,
                         os.path.join(checkpointDir, model_name),

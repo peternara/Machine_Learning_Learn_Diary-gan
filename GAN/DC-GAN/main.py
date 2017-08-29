@@ -13,7 +13,7 @@ flags.DEFINE_integer("epoch", 100, "训练次数")
 flags.DEFINE_float("learning_rate", 0.0002, "学习速率")
 flags.DEFINE_float("beta1", 0.5, "Adam 动量")
 flags.DEFINE_integer("train_size", np.inf, "每个epoch的训练的次数")
-flags.DEFINE_integer("batch_size", 5, "批大小")
+flags.DEFINE_integer("batch_size", 64, "批大小")
 flags.DEFINE_integer("input_height", 256, "图片输入高度")
 flags.DEFINE_integer("input_width", None, "图片输入宽度, 如果空, 和高度一致")
 flags.DEFINE_integer("output_height", 128, "输出图片高度")
@@ -28,7 +28,7 @@ FLAGS = flags.FLAGS
 
 
 def main(_):
-    # pp.pprint(flags.FLAGS.__flags)
+    pp.pprint(flags.FLAGS.__flags)
 
     if FLAGS.input_width is None:
         FLAGS.input_width = FLAGS.input_height
