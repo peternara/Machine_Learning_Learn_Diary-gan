@@ -6,17 +6,16 @@ import tensorflow as tf
 
 from model import DCGAN
 from utils import pp, show_all_variables, visualize
-import scipy.misc as plt
 
 flags = tf.app.flags
 flags.DEFINE_integer("epoch", 100, "训练次数")
 flags.DEFINE_float("learning_rate", 0.0002, "学习速率")
 flags.DEFINE_float("beta1", 0.5, "Adam 动量")
 flags.DEFINE_integer("train_size", np.inf, "每个epoch的训练的次数")
-flags.DEFINE_integer("batch_size", 64, "批大小")
+flags.DEFINE_integer("batch_size", 5, "批大小")
 flags.DEFINE_integer("input_height", 256, "图片输入高度")
 flags.DEFINE_integer("input_width", None, "图片输入宽度, 如果空, 和高度一致")
-flags.DEFINE_integer("output_height", 128, "输出图片高度")
+flags.DEFINE_integer("output_height", 64, "输出图片高度")
 flags.DEFINE_integer("output_width", None, "图片输出宽度, 如果空, 和高度一致")
 flags.DEFINE_string("input_fname_pattern", "*.jpg", "图片名")
 flags.DEFINE_string("checkpointDir", "checkpoint_dir/", "模型保存路径")
@@ -41,6 +40,7 @@ def main(_):
         tf.gfile.MakeDirs(FLAGS.buckets)
     if not tf.gfile.Exists(FLAGS.summaryDir):
         tf.gfile.MakeDirs(FLAGS.summaryDir)
+
     #
     # 针对PAI IO 优化:
     # 把OSS文件拷贝到运行时目录
@@ -51,6 +51,7 @@ def main(_):
     for file_path in tf.gfile.Glob(os.path.join(FLAGS.buckets, FLAGS.dataset, '*')):
         tf.gfile.Copy(file_path, os.path.join('cope_data', FLAGS.dataset, os.path.basename(file_path)), overwrite=True)
     FLAGS.buckets = './cope_data/'
+
     # 注意, 如果不是在PAI上可以省去上面这一步
     # 请注释掉上面5行代码
     #

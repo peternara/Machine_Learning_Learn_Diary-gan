@@ -1,3 +1,4 @@
+# coding=utf-8
 from __future__ import division
 import os
 import time
@@ -15,23 +16,39 @@ def conv_out_size_same(size, stride):
 
 
 class DCGAN(object):
-    def __init__(self, sess, input_height=108, input_width=108, crop=True,
-                 batch_size=64, sample_num=64, output_height=64, output_width=64,
-                 y_dim=None, z_dim=100, gf_dim=128, df_dim=128,
-                 gfc_dim=1024, dfc_dim=1024, c_dim=3, dataset_name='default',
-                 input_fname_pattern='*.jpg', checkpointDir=None, sample_dir=None, config=None):
+    def __init__(self,
+                 sess,
+                 input_height=108,
+                 input_width=108,
+                 crop=True,
+                 batch_size=64,
+                 sample_num=64,
+                 output_height=64,
+                 output_width=64,
+                 y_dim=None,
+                 z_dim=100,
+                 gf_dim=64,
+                 df_dim=64,
+                 gfc_dim=1024,
+                 dfc_dim=1024,
+                 c_dim=3,
+                 dataset_name='default',
+                 input_fname_pattern='*.jpg',
+                 checkpointDir=None,
+                 sample_dir=None,
+                 config=None):
         """
 
         Args:
           sess: TensorFlow session
-          batch_size: The size of batch. Should be specified before training.
-          y_dim: (optional) Dimension of dim for y. [None]
-          z_dim: (optional) Dimension of dim for Z. [100]
-          gf_dim: (optional) Dimension of gen filters in first conv layer. [64]
-          df_dim: (optional) Dimension of discrim filters in first conv layer. [64]
-          gfc_dim: (optional) Dimension of gen units for for fully connected layer. [1024]
-          dfc_dim: (optional) Dimension of discrim units for fully connected layer. [1024]
-          c_dim: (optional) Dimension of image color. For grayscale input, set to 1. [3]
+          batch_size: 批大小
+          y_dim: 如果有标签的话, 标签的类数
+          z_dim: 随机噪音大小, 默认100
+          gf_dim: 生成网络最后一层卷积核数, 默认64
+          df_dim: 判别网络最后一层卷积核数, 默认64
+          gfc_dim: 判别网络最后一层全连接神经元数, 默认1024, 只在有y_dim的时候有效
+          dfc_dim: 生成网络最后一层全连接神经元数, 默认1024, 只在有y_dim的时候有效
+          c_dim: 图片维度, 默认为3, 如果维度为1, 会使用灰度图训练, 如 MNIST
         """
         self.sess = sess
         self.crop = crop
@@ -316,7 +333,6 @@ class DCGAN(object):
 
                 h4, self.h4_w, self.h4_b = deconv2d(
                     h3, [self.batch_size, s_h, s_w, self.c_dim], name='g_h4', with_w=True)
-
                 return tf.nn.tanh(h4)
             else:
                 s_h, s_w = self.output_height, self.output_width
