@@ -27,8 +27,8 @@ class DCGAN(object):
                  output_width=64,
                  y_dim=None,
                  z_dim=100,
-                 gf_dim=64,
-                 df_dim=64,
+                 gf_dim=256,
+                 df_dim=256,
                  gfc_dim=1024,
                  dfc_dim=1024,
                  c_dim=3,
@@ -321,6 +321,7 @@ class DCGAN(object):
                 self.h0 = tf.reshape(
                     self.z_, [-1, s_h16, s_w16, self.gf_dim * 8])
                 h0 = tf.nn.relu(self.g_bn0(self.h0))
+                h0 = tf.nn.dropout(h0, 0.5)
 
                 self.h1, self.h1_w, self.h1_b = deconv2d(
                     h0, [self.batch_size, s_h8, s_w8, self.gf_dim * 4], name='g_h1', with_w=True)
@@ -381,6 +382,7 @@ class DCGAN(object):
                     linear(z, self.gf_dim * 8 * s_h16 * s_w16, 'g_h0_lin'),
                     [-1, s_h16, s_w16, self.gf_dim * 8])
                 h0 = tf.nn.relu(self.g_bn0(h0, train=False))
+                h0 = tf.nn.dropout(h0, 0.5)
 
                 h1 = deconv2d(h0, [self.batch_size, s_h8, s_w8, self.gf_dim * 4], name='g_h1')
                 h1 = tf.nn.relu(self.g_bn1(h1, train=False))
@@ -438,7 +440,7 @@ class DCGAN(object):
         import re
         print(" [*] Reading checkpoints...")
         checkpointDir = os.path.join(checkpointDir, self.model_dir)
-
+        print checkpointDir
         ckpt = tf.train.get_checkpoint_state(checkpointDir)
         if ckpt and ckpt.model_checkpoint_path:
             ckpt_name = os.path.basename(ckpt.model_checkpoint_path)
