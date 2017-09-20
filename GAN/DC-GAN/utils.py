@@ -203,7 +203,7 @@ def visualize(sess, dcgan, config, option):
             save_images(samples, [image_frame_dim, image_frame_dim], './samples/test_arange_%s.png' % (idx))
     elif option == 2:
         values = np.arange(0, 1, 1. / config.batch_size)
-        for idx in [random.randint(0, 99) for _ in xrange(100)]:
+        for idx in [random.randint(0, 99) for _ in xrange(5)]:
             print(" [*] %d" % idx)
             z = np.random.uniform(-1, 1, size=(dcgan.z_dim))
             z_sample = np.tile(z, (config.batch_size, 1))

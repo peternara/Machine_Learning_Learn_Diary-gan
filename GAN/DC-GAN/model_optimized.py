@@ -321,7 +321,6 @@ class DCGAN(object):
                 self.h0 = tf.reshape(
                     self.z_, [-1, s_h16, s_w16, self.gf_dim * 8])
                 h0 = tf.nn.relu(self.g_bn0(self.h0))
-                h0 = tf.nn.dropout(h0, 0.5)
 
                 self.h1, self.h1_w, self.h1_b = deconv2d(
                     h0, [self.batch_size, s_h8, s_w8, self.gf_dim * 4], name='g_h1', with_w=True)
@@ -369,7 +368,6 @@ class DCGAN(object):
     def sampler(self, z, y=None):
         with tf.variable_scope("generator") as scope:
             scope.reuse_variables()
-
             if not self.y_dim:
                 s_h, s_w = self.output_height, self.output_width
                 s_h2, s_w2 = conv_out_size_same(s_h, 2), conv_out_size_same(s_w, 2)
@@ -382,7 +380,6 @@ class DCGAN(object):
                     linear(z, self.gf_dim * 8 * s_h16 * s_w16, 'g_h0_lin'),
                     [-1, s_h16, s_w16, self.gf_dim * 8])
                 h0 = tf.nn.relu(self.g_bn0(h0, train=False))
-                h0 = tf.nn.dropout(h0, 0.5)
 
                 h1 = deconv2d(h0, [self.batch_size, s_h8, s_w8, self.gf_dim * 4], name='g_h1')
                 h1 = tf.nn.relu(self.g_bn1(h1, train=False))
@@ -418,7 +415,6 @@ class DCGAN(object):
                 h2 = tf.nn.relu(self.g_bn2(
                     deconv2d(h1, [self.batch_size, s_h2, s_w2, self.gf_dim * 2], name='g_h2'), train=False))
                 h2 = conv_cond_concat(h2, yb)
-                h2 = tf.nn.dropout(h2, 0.5)
 
                 return tf.nn.sigmoid(deconv2d(h2, [self.batch_size, s_h, s_w, self.c_dim], name='g_h3'))
 
