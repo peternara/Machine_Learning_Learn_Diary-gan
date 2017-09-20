@@ -23,7 +23,7 @@ class Reader(object):
 
 
 if __name__ == '__main__':
-    reader = Reader('wavFile.tfr', 2)
+    reader = Reader('wavFile.tfr', 2, 266)
     sess = tf.InteractiveSession()
     tf.train.start_queue_runners()
     print sess.run(reader.read())

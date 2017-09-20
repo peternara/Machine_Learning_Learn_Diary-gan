@@ -11,7 +11,7 @@ tf.flags.DEFINE_integer('frame_count', 60, "帧数")
 tf.flags.DEFINE_integer('frequency', 16000, "采样率")
 
 sess = tf.InteractiveSession()
-reader = read.Reader(FLAGS.buckets, 64)
+reader = read.Reader(FLAGS.buckets, 64, 16000 // 60)
 
 batch = reader.read()
 
