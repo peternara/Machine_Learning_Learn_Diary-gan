@@ -180,3 +180,4 @@ fabric.properties
 /data/
 /wavFile_test_frame_60.tfr
 /wavFile_train_frame_60.tfr
+/train.zip

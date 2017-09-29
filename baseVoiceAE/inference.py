@@ -1,19 +1,6 @@
 import tensorflow as tf
 
 
-# def downconv(x, output_dim, kwidth=5, stride=2, init=None, uniform=False, name='downconv'):
-#     if init is None:
-#         init = tf.contrib.layers.xavier_initializer()
-#     with tf.variable_scope(name):
-#         w = tf.get_variable('w', [kwidth, x.shape[-1], output_dim],
-#                             initializer=init)
-#         conv = tf.nn.conv1d(x, w, padding='SAME', stride=stride)
-#         b = tf.get_variable('b', [output_dim],
-#                             initializer=tf.constant_initializer([0.1]))
-#         conv = tf.nn.bias_add(conv, b)
-#     return conv
-
-
 class Inference(object):
     def __init__(self, input_tensor, kwidth=5, stride=2, is_train=True):
         self.input_tensor = input_tensor
