@@ -9,11 +9,11 @@ FLAGS = tf.flags.FLAGS
 tf.flags.DEFINE_string('train_file', 'wavFile_train_frame_60.tfr', '数据源地址')
 tf.flags.DEFINE_string('checkpointDir', 'saves/', "模型保存路径")
 tf.flags.DEFINE_string('summaryDir', 'logs', "tensorboard保存路径")
-tf.flags.DEFINE_integer('batch_size', 2, '批大小')
+tf.flags.DEFINE_integer('batch_size', 100, '批大小')
 tf.flags.DEFINE_integer('frame_count', 60, "帧数")
 tf.flags.DEFINE_integer('frequency', 16000, "采样率")
 tf.flags.DEFINE_integer('kwidth', 18, '窗格大小')
-tf.flags.DEFINE_integer('num_train', 10000, "训练次数")
+tf.flags.DEFINE_integer('num_train', 1000, "训练次数")
 tf.flags.DEFINE_float('learning_rate', 3e-4, "学习速率")
 tf.flags.DEFINE_float('beta1', 0.5, "Adam动量")
 tf.flags.DEFINE_boolean('test', False, '是否测试')
@@ -31,7 +31,7 @@ label_tensor = tf.placeholder(tf.int16, [num_batch_data_count, 1])
 input_tensor = tf.cast(input_tensor, tf.float32)
 label_tensor = tf.cast(label_tensor, tf.float32)
 
-logits = inference.Inference(input_tensor, FLAGS.kwidth, 2).build_model()
+logits = inference.Inference(input_tensor, FLAGS.kwidth, 2, not FLAGS.test).build_model()
 loss_val = loss.Losses(logits=logits, labels=label_tensor).loss
 tf.summary.scalar('loss', loss_val)
 
@@ -47,7 +47,6 @@ if not FLAGS.test:
     summary_op = tf.summary.merge_all()
     for i in xrange(FLAGS.num_train):
         wavs, labels = reader.read()
-        print "step: {}".format(i)
         if i % 10 == 0:
             # print "loss: {}".format(loss_val.eval(feed_dict={
             #     input_tensor: wavs,
@@ -58,7 +57,6 @@ if not FLAGS.test:
                 label_tensor: labels
             })
             summary.add_summary(summary_data, i)
-            summary.flush()
         if i % 1000 == 0:
             saver.save(sess, save_path=FLAGS.checkpointDir)
 
@@ -71,9 +69,9 @@ else:
     import scipy.io.wavfile as wavfile
 
     saver.restore(sess, FLAGS.checkpointDir)
-    # reader = read.Reader(sess=sess, path='./wavFile_test_frame_60.tfr', batch_size=FLAGS.batch_size,
-    #                      window_size=FLAGS.frequency // FLAGS.frame_count, kwidth=FLAGS.kwidth)
-    # tf.train.start_queue_runners(sess=sess, coord=coord)
+    reader = read.Reader(sess=sess, path='./wavFile_test_frame_60.tfr', batch_size=FLAGS.batch_size,
+                         window_size=FLAGS.frequency // FLAGS.frame_count, kwidth=FLAGS.kwidth)
+    tf.train.start_queue_runners(sess=sess, coord=coord)
     wavs, labels = reader.read()
     logits_predict, ground_truth = sess.run([logits, label_tensor], feed_dict={
         input_tensor: wavs,

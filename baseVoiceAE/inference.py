@@ -1,6 +1,11 @@
 import tensorflow as tf
 
 
+def add_l2_loss(w, decay):
+    l2loss = decay * tf.nn.l2_loss(w)
+    tf.add_to_collection('l2_loss', l2loss)
+
+
 class Inference(object):
     def __init__(self, input_tensor, kwidth=5, stride=2, is_train=True):
         self.input_tensor = input_tensor
@@ -14,7 +19,7 @@ class Inference(object):
 
     def build_model(self):
         with tf.variable_scope('batch_norm') as scope:
-            input_tensor = tf.contrib.layers.batch_norm(x=self.input_tensor,
+            input_tensor = tf.contrib.layers.batch_norm(self.input_tensor,
                                                         is_training=self.is_train,
                                                         updates_collections=None,
                                                         scale=False,
@@ -25,21 +30,25 @@ class Inference(object):
                 input_tensor = tf.cast(input_tensor, tf.float32)
                 input_tensor = tf.expand_dims(input_tensor, 2)
                 w = tf.get_variable('w', [self.kwidth, 1, self.num_kernel[0]], initializer=self.w_init)
+                add_l2_loss(w, 4e-3)
                 b = tf.get_variable('b', [self.num_kernel[0]], initializer=self.b_init)
                 conv = tf.nn.conv1d(input_tensor, w, stride=self.stride, padding='SAME')
                 input_layer = tf.nn.relu(conv + b, name=scope.name)
             with tf.variable_scope('hidden_1') as scope:
                 w = tf.get_variable('w', [self.kwidth, self.num_kernel[0], self.num_kernel[1]], initializer=self.w_init)
+                add_l2_loss(w, 4e-3)
                 b = tf.get_variable('b', [self.num_kernel[1]], initializer=self.b_init)
                 conv = tf.nn.conv1d(input_layer, w, stride=self.stride, padding='SAME')
                 hidden_1 = tf.nn.relu(conv + b, name=scope.name)
             with tf.variable_scope('hidden_2') as scope:
                 w = tf.get_variable('w', [self.kwidth, self.num_kernel[1], self.num_kernel[2]], initializer=self.w_init)
+                add_l2_loss(w, 4e-3)
                 b = tf.get_variable('b', [self.num_kernel[2]], initializer=self.b_init)
                 conv = tf.nn.conv1d(hidden_1, w, stride=self.stride, padding='SAME')
                 hidden_2 = tf.nn.relu(conv + b, name=scope.name)
             with tf.variable_scope('hidden_3') as scope:
                 w = tf.get_variable('w', [self.kwidth, self.num_kernel[2], self.num_kernel[3]], initializer=self.w_init)
+                add_l2_loss(w, 4e-3)
                 b = tf.get_variable('b', [self.num_kernel[3]], initializer=self.b_init)
                 conv = tf.nn.conv1d(hidden_2, w, stride=self.stride, padding='SAME')
                 hidden_3 = tf.nn.relu(conv + b, name=scope.name)
@@ -48,6 +57,7 @@ class Inference(object):
             with tf.variable_scope('deconv_1') as scope:
                 w = tf.get_variable('w', [self.kwidth, 1, self.num_kernel[2], self.num_kernel[3]],
                                     initializer=self.w_init)
+                add_l2_loss(w, 4e-3)
                 b = tf.get_variable('b', [self.num_kernel[2]], initializer=self.b_init)
                 prev_shape = hidden_2.shape.as_list()
                 output_shape = [prev_shape[0], 1, prev_shape[1], prev_shape[2]]
@@ -56,6 +66,7 @@ class Inference(object):
             with tf.variable_scope('deconv_2') as scope:
                 w = tf.get_variable('w', [self.kwidth, 1, self.num_kernel[1], self.num_kernel[2]],
                                     initializer=self.w_init)
+                add_l2_loss(w, 4e-3)
                 b = tf.get_variable('b', [self.num_kernel[1]], initializer=self.b_init)
                 prev_shape = hidden_1.shape.as_list()
                 output_shape = [prev_shape[0], 1, prev_shape[1], prev_shape[2]]
@@ -64,6 +75,7 @@ class Inference(object):
             with tf.variable_scope('deconv_3') as scope:
                 w = tf.get_variable('w', [self.kwidth, 1, self.num_kernel[0], self.num_kernel[1]],
                                     initializer=self.w_init)
+                add_l2_loss(w, 4e-3)
                 b = tf.get_variable('b', [self.num_kernel[0]], initializer=self.b_init)
                 prev_shape = input_layer.shape.as_list()
                 output_shape = [prev_shape[0], 1, prev_shape[1], prev_shape[2]]
@@ -71,6 +83,7 @@ class Inference(object):
                 deconv_3 = tf.nn.relu(deconv + b, name=scope.name)
             with tf.variable_scope('output_layer') as scope:
                 w = tf.get_variable('w', [self.kwidth, 1, 1, self.num_kernel[0]], initializer=self.w_init)
+                add_l2_loss(w, 4e-3)
                 b = tf.get_variable('b', [1], initializer=self.b_init)
                 prev_shape = input_tensor.shape.as_list()
                 output_shape = [prev_shape[0], 1, prev_shape[1], prev_shape[2]]
@@ -79,6 +92,7 @@ class Inference(object):
         with tf.variable_scope('logits') as scope:
             output_layer = tf.squeeze(output_layer)
             w = tf.get_variable('w', [output_layer.shape[-1], 1], initializer=self.w_init)
+            add_l2_loss(w, 4e-3)
             b = tf.get_variable('b', [1], initializer=self.b_init)
             logits = tf.matmul(output_layer, w) + b
         return logits

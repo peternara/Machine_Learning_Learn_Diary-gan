@@ -112,3 +112,8 @@ Optimize it in 2 days
 use LSTM neural network to predict stock data
 
 [X] VAE
+
+[x] vocal track AutoEncoder
+1. [x] V1.0 basic AutoEncoder model
+2. [x] V1.1 batch_norm
+3. [] Generator
