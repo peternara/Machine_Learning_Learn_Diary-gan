@@ -3,13 +3,16 @@ import tensorflow as tf
 import read
 import inference
 import loss
+import os
+
+os.chdir(os.path.dirname(__file__))
 
 FLAGS = tf.flags.FLAGS
 
 tf.flags.DEFINE_string('train_file', 'wavFile_train_frame_60.tfr', '数据源地址')
-tf.flags.DEFINE_string('checkpointDir', 'saves/', "模型保存路径")
+tf.flags.DEFINE_string('checkpointDir', 'saves/model.ckpt', "模型保存路径")
 tf.flags.DEFINE_string('summaryDir', 'logs', "tensorboard保存路径")
-tf.flags.DEFINE_integer('batch_size', 100, '批大小')
+tf.flags.DEFINE_integer('batch_size', 1, '批大小')
 tf.flags.DEFINE_integer('frame_count', 60, "帧数")
 tf.flags.DEFINE_integer('frequency', 16000, "采样率")
 tf.flags.DEFINE_integer('kwidth', 18, '窗格大小')
@@ -77,19 +80,21 @@ else:
         input_tensor: wavs,
         label_tensor: labels
     })
+    plt.figure(1, [20, 12])
     plt.subplot(411)
+    plt.title('predict')
     plt.plot(logits_predict)
     plt.subplot(412)
+    plt.title('truth')
     plt.plot(ground_truth)
     plt.subplot(413)
+    plt.title('both')
     plt.plot(logits_predict, 'r')
     plt.plot(ground_truth, 'b')
     plt.subplot(414)
+    plt.title('loss')
     plt.plot(abs(logits_predict - ground_truth))
     plt.show()
-
-    wavfile.write('./predict.wav', 16000, logits_predict)
-    wavfile.write('./raw.wav', 16000, ground_truth)
 
     # print "loss: {}".format(loss_val.eval(feed_dict={
     #     input_tensor: wavs,

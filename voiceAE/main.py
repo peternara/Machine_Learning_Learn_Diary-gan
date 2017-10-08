@@ -18,7 +18,7 @@ tf.flags.DEFINE_integer('num_train', 10000, "训练次数")
 tf.flags.DEFINE_float('learning_rate', 2e-4, "学习速率")
 tf.flags.DEFINE_float('beta1', 0.5, "Adam动量")
 tf.flags.DEFINE_float('canvas_size', 2 ** 14, "每条音频数据大小")
-tf.flags.DEFINE_boolean('test', False, '是否测试')
+tf.flags.DEFINE_boolean('test', True, '是否测试')
 
 sess = tf.InteractiveSession()
 coord = tf.train.Coordinator()

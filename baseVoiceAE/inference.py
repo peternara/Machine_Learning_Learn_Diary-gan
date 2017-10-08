@@ -1,3 +1,4 @@
+# coding=utf-8
 import tensorflow as tf
 
 
@@ -7,94 +8,76 @@ def add_l2_loss(w, decay):
 
 
 class Inference(object):
-    def __init__(self, input_tensor, kwidth=5, stride=2, is_train=True):
+    def __init__(self, input_tensor, kwidth=31, stride=2, isTrain=True, scope=None):
         self.input_tensor = input_tensor
         self.window_size = input_tensor.shape[-1]
-        self.num_kernel = [64, 128, 256, 512]
+        self.num_kernel = [16, 64, 256, 512]
         self.kwidth = kwidth
         self.stride = stride
         self.w_init = tf.contrib.layers.xavier_initializer()
         self.b_init = tf.constant_initializer([0.1])
-        self.is_train = is_train
+        self.isTrain = isTrain
+        self.scope = scope
+
+    def batch_norm(
+            self, x, is_train, scope="batch_norm"):
+        """
+        披标准化
+        :param x: Tensor
+        :param is_train:  是否是训练, 训练和测试必须指定
+        :param scope: 操作名字
+        :return: op
+        """
+        return tf.contrib.layers.batch_norm(
+            x,
+            is_training=is_train,
+            updates_collections=None,
+            scale=False,  # 如果下一个操作是线性的, 比如 Relu scale可以为False
+            reuse=True,
+            scope=scope
+        )
 
     def build_model(self):
-        with tf.variable_scope('batch_norm') as scope:
-            input_tensor = tf.contrib.layers.batch_norm(self.input_tensor,
-                                                        is_training=self.is_train,
-                                                        updates_collections=None,
-                                                        scale=False,
-                                                        reuse=False,
-                                                        scope=scope.name)
+        layer_shape = []
         with tf.variable_scope('encoder'):
-            with tf.variable_scope('input_layer') as scope:
-                input_tensor = tf.cast(input_tensor, tf.float32)
-                input_tensor = tf.expand_dims(input_tensor, 2)
-                w = tf.get_variable('w', [self.kwidth, 1, self.num_kernel[0]], initializer=self.w_init)
-                add_l2_loss(w, 4e-3)
-                b = tf.get_variable('b', [self.num_kernel[0]], initializer=self.b_init)
-                conv = tf.nn.conv1d(input_tensor, w, stride=self.stride, padding='SAME')
-                input_layer = tf.nn.relu(conv + b, name=scope.name)
-            with tf.variable_scope('hidden_1') as scope:
-                w = tf.get_variable('w', [self.kwidth, self.num_kernel[0], self.num_kernel[1]], initializer=self.w_init)
-                add_l2_loss(w, 4e-3)
-                b = tf.get_variable('b', [self.num_kernel[1]], initializer=self.b_init)
-                conv = tf.nn.conv1d(input_layer, w, stride=self.stride, padding='SAME')
-                hidden_1 = tf.nn.relu(conv + b, name=scope.name)
-            with tf.variable_scope('hidden_2') as scope:
-                w = tf.get_variable('w', [self.kwidth, self.num_kernel[1], self.num_kernel[2]], initializer=self.w_init)
-                add_l2_loss(w, 4e-3)
-                b = tf.get_variable('b', [self.num_kernel[2]], initializer=self.b_init)
-                conv = tf.nn.conv1d(hidden_1, w, stride=self.stride, padding='SAME')
-                hidden_2 = tf.nn.relu(conv + b, name=scope.name)
-            with tf.variable_scope('hidden_3') as scope:
-                w = tf.get_variable('w', [self.kwidth, self.num_kernel[2], self.num_kernel[3]], initializer=self.w_init)
-                add_l2_loss(w, 4e-3)
-                b = tf.get_variable('b', [self.num_kernel[3]], initializer=self.b_init)
-                conv = tf.nn.conv1d(hidden_2, w, stride=self.stride, padding='SAME')
-                hidden_3 = tf.nn.relu(conv + b, name=scope.name)
+            input_tensor = tf.reshape(self.input_tensor, [-1, self.kwidth])
+            # with tf.variable_scope('batch_norm') as batch_norm_scope:
+            #     input_tensor = self.batch_norm(input_tensor, is_train=self.isTrain, scope=batch_norm_scope)
+            layer = tf.expand_dims(input_tensor, 1)
+            layer = tf.expand_dims(layer, 3)
+            layer_shape.append(layer.get_shape().as_list())
+            for index, num_kernel in enumerate(self.num_kernel):
+                with tf.variable_scope('encode_{}'.format(index)) as scope:
+                    w = tf.get_variable('w', [1, self.kwidth, layer.shape[-1], num_kernel], initializer=self.w_init)
+                    b = tf.get_variable('b', [num_kernel], initializer=self.b_init)
+                    conv = tf.nn.conv2d(layer, w, strides=[1, 1, self.stride, 1], padding='SAME')
+                    layer_prew = layer.shape
+                    layer = tf.nn.relu(tf.nn.bias_add(conv, b), name=scope.name)
+                    print "conv {} -> {}".format(layer_prew, layer.shape)
+                    layer_shape.append(layer.get_shape().as_list())
+
         with tf.variable_scope('decoder'):
-            hidden_3 = tf.expand_dims(hidden_3, 1)
-            with tf.variable_scope('deconv_1') as scope:
-                w = tf.get_variable('w', [self.kwidth, 1, self.num_kernel[2], self.num_kernel[3]],
-                                    initializer=self.w_init)
-                add_l2_loss(w, 4e-3)
-                b = tf.get_variable('b', [self.num_kernel[2]], initializer=self.b_init)
-                prev_shape = hidden_2.shape.as_list()
-                output_shape = [prev_shape[0], 1, prev_shape[1], prev_shape[2]]
-                deconv = tf.nn.conv2d_transpose(hidden_3, w, output_shape=output_shape, strides=[1, 1, self.stride, 1])
-                deconv_1 = tf.nn.relu(deconv + b, name=scope.name)
-            with tf.variable_scope('deconv_2') as scope:
-                w = tf.get_variable('w', [self.kwidth, 1, self.num_kernel[1], self.num_kernel[2]],
-                                    initializer=self.w_init)
-                add_l2_loss(w, 4e-3)
-                b = tf.get_variable('b', [self.num_kernel[1]], initializer=self.b_init)
-                prev_shape = hidden_1.shape.as_list()
-                output_shape = [prev_shape[0], 1, prev_shape[1], prev_shape[2]]
-                deconv = tf.nn.conv2d_transpose(deconv_1, w, output_shape=output_shape, strides=[1, 1, self.stride, 1])
-                deconv_2 = tf.nn.relu(deconv + b, name=scope.name)
-            with tf.variable_scope('deconv_3') as scope:
-                w = tf.get_variable('w', [self.kwidth, 1, self.num_kernel[0], self.num_kernel[1]],
-                                    initializer=self.w_init)
-                add_l2_loss(w, 4e-3)
-                b = tf.get_variable('b', [self.num_kernel[0]], initializer=self.b_init)
-                prev_shape = input_layer.shape.as_list()
-                output_shape = [prev_shape[0], 1, prev_shape[1], prev_shape[2]]
-                deconv = tf.nn.conv2d_transpose(deconv_2, w, output_shape=output_shape, strides=[1, 1, self.stride, 1])
-                deconv_3 = tf.nn.relu(deconv + b, name=scope.name)
-            with tf.variable_scope('output_layer') as scope:
-                w = tf.get_variable('w', [self.kwidth, 1, 1, self.num_kernel[0]], initializer=self.w_init)
-                add_l2_loss(w, 4e-3)
-                b = tf.get_variable('b', [1], initializer=self.b_init)
-                prev_shape = input_tensor.shape.as_list()
-                output_shape = [prev_shape[0], 1, prev_shape[1], prev_shape[2]]
-                deconv = tf.nn.conv2d_transpose(deconv_3, w, output_shape=output_shape, strides=[1, 1, self.stride, 1])
-                output_layer = tf.nn.relu(deconv + b, name=scope.name)
-        with tf.variable_scope('logits') as scope:
-            output_layer = tf.squeeze(output_layer)
-            w = tf.get_variable('w', [output_layer.shape[-1], 1], initializer=self.w_init)
-            add_l2_loss(w, 4e-3)
+            layer_shape_reversed = layer_shape[::-1]
+            for index in xrange(0, len(self.num_kernel)):
+                with tf.variable_scope('deconv_{}'.format(index)) as scope:
+                    input_channels = layer_shape_reversed[index][-1]
+                    output_channels = layer_shape_reversed[index + 1][-1]
+                    output_shape = layer_shape_reversed[index + 1]
+
+                    w = tf.get_variable('w', [1, self.kwidth, output_channels, input_channels],
+                                        initializer=self.w_init)
+                    b = tf.get_variable('b', [output_channels], initializer=self.b_init)
+                    deconv = tf.nn.conv2d_transpose(layer, w, output_shape=output_shape, strides=[1, 1, self.stride, 1])
+                    layer_prew = layer.shape
+                    layer = tf.nn.relu(tf.nn.bias_add(deconv, b), name=scope.name)
+                    print "deconv {} -> {}".format(layer_prew, layer.shape)
+
+        layer = tf.squeeze(layer)
+        with tf.variable_scope('full_connect'):
+            w = tf.get_variable('w', [layer.shape[-1], 1], initializer=self.w_init)
             b = tf.get_variable('b', [1], initializer=self.b_init)
-            logits = tf.matmul(output_layer, w) + b
+            logits = tf.matmul(layer, w) + b
+
         return logits
 
 
@@ -102,12 +85,11 @@ if __name__ == '__main__':
     import read
 
     sess = tf.InteractiveSession()
-    reader = read.Reader(sess, 'wavFile_train_frame_60.tfr', 2, 266, 18)
+    reader = read.Reader('wavFile_train_frame_60.tfr', 1, 266, 32)
     tf.train.start_queue_runners()
-    input_tensor = tf.placeholder(tf.int16, [494, 18])
-    inference = Inference(input_tensor, 18, 2)
+    inference = Inference(reader.wav_raw, 32, 2)
     logits = inference.build_model()
     tf.global_variables_initializer().run()
-    print sess.run(logits, feed_dict={
-        input_tensor: reader.read()[0]
-    })
+    print logits
+    print reader.wav_raw
+    print reader.label

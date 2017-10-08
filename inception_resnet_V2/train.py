@@ -1,42 +1,46 @@
 # coding=utf-8
 import tensorflow as tf
-from inception_resnet_v2 import inception_resnet_v2, inception_resnet_v2_arg_scope
-import image_provider
-import matplotlib.pyplot as plt
+from nets import nets_factory
+from preprocessing import preprocessing_factory
+import reader
+import utils
 
-
-tf.app.flags.DEFINE_string('buckets', './train/', '图片路径')
-tf.app.flags.DEFINE_float('random_contrast_uper', 0.7, '随机对比度')
-tf.app.flags.DEFINE_float('random_contrast_lower', 0.3, '随机对比度')
-tf.app.flags.DEFINE_float('random_crop', 0.3, '随机裁剪')
-tf.app.flags.DEFINE_float('random_scale', 0.3, '随机放大')
-tf.app.flags.DEFINE_float('random_brightness', 73, '随机放大')
-tf.app.flags.DEFINE_integer('batch_size', 1, '批大小')
+tf.flags.DEFINE_string('buckets', './data', "数据源")
+tf.flags.DEFINE_string('loss_model', 'inception_resnet_v2', "需要使用到的模型")
+tf.flags.DEFINE_string('checkpoint_exclude_scopes', 'InceptionResnetV2/Logits,InceptionResnetV2/AuxLogits', '剔除的部分')
+tf.flags.DEFINE_string('trainable_scopes', 'InceptionResnetV2/Logits,InceptionResnetV2/AuxLogits', '需要训练的部分')
+tf.flags.DEFINE_integer('num_classes', 80, "最后一层输出")
+tf.flags.DEFINE_integer('num_samples', 100000, "数据集数据数")
+tf.flags.DEFINE_integer('height', 299, "图片高度")
+tf.flags.DEFINE_integer('width', 299, "图片宽度")
+tf.flags.DEFINE_integer('num_preprocessing_threads', 8, "运行线程")
+tf.flags.DEFINE_boolean('is_training', True, "是否在训练")
 
 FLAGS = tf.app.flags.FLAGS
-
 slim = tf.contrib.slim
 
+network_fn = nets_factory.get_network_fn(
+    FLAGS.loss_model,
+    num_classes=FLAGS.num_classes,
+    is_training=FLAGS.is_training)
 
-def main(args=None):
-    reader = image_provider.Reader()
-    image, label = reader.read()
+image_preprocessing_fn, sec = preprocessing_factory.get_preprocessing(
+    FLAGS.loss_model,
+    is_training=FLAGS.is_training)
 
-    sess = tf.InteractiveSession()
-    tf.train.start_queue_runners(sess=sess)
+provider = utils.get_provider(FLAGS)
+image, label = provider.get(['image', 'label'])
 
+image = image_preprocessing_fn(image, FLAGS.height, FLAGS.width)
 
-    with slim.arg_scope(inception_resnet_v2_arg_scope()):
-        logits, end_points = inception_resnet_v2(
-            image,
-            num_classes=100,
-            is_training=True)
+images, labels = tf.train.batch(
+    [image, label],
+    batch_size=FLAGS.batch_size,
+    num_threads=FLAGS.num_preprocessing_threads,
+    capacity=5 * FLAGS.batch_size)
+labels = slim.one_hot_encoding(
+    labels, FLAGS.num_classes)
+batch_queue = slim.prefetch_queue.prefetch_queue(
+    [images, labels], capacity=2 * FLAGS.num_classes)
 
-    exclude = ['InceptionResnetV2/Logits', 'InceptionResnetV2/AuxLogits', 'InceptionResnetV2/Conv2d_1a_3x3']
-    variables_to_restore = slim.get_variables_to_restore(exclude=exclude)
-
-    saver = tf.summary.FileWriter('./logs')
-    saver.close()
-
-if __name__ == '__main__':
-    tf.app.run()
+network_fn(image)

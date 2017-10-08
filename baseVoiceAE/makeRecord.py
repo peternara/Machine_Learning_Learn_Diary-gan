@@ -6,7 +6,7 @@ frame_count = 60
 writer_train = tf.python_io.TFRecordWriter('wavFile_train_frame_{}.tfr'.format(frame_count))
 writer_test = tf.python_io.TFRecordWriter('wavFile_test_frame_{}.tfr'.format(frame_count))
 
-for file_path in tf.gfile.Glob('data/*.WAV'):
+for file_path in tf.gfile.Glob('clean_trainset_wav_16k/*.wav'):
     fm, wav = wavfile.read(file_path)
 
     window = fm // frame_count
