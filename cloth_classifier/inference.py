@@ -111,7 +111,7 @@ def inference(image):
             dim *= d
         flat = tf.reshape(pool2, [-1, dim])
         weights = variable_with_weight_decay('weights', [dim, 256], 4e-2, 4e-3)
-        biases = tf.constant(0.1, shape=[256], name='biases')
+        biases = tf.constnt(0.1, shape=[256], name='biases')
         fc_1 = tf.nn.relu(tf.add(tf.matmul(flat, weights), biases), name=scope.name)
         summary_helper(fc_1)
     with tf.variable_scope('drop_out_3') as scope:
